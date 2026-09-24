@@ -32,7 +32,7 @@ function dashTexture(hex: string): THREE.CanvasTexture {
 export function FlowTube({
   points,
   color,
-  radius = 0.012,
+  radius = 0.016,
   speed = 0.45,
   gain = 1,
 }: {

@@ -1,4 +1,4 @@
-import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
+import { Environment, Lightformer } from "@react-three/drei";
 
 export function Studio() {
   return (
@@ -16,9 +16,12 @@ export function Studio() {
       </Environment>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <circleGeometry args={[8, 48]} />
-        <meshStandardMaterial color="#101116" roughness={0.95} metalness={0.05} />
+        <meshStandardMaterial color="#2a2d34" roughness={0.92} metalness={0.04} />
       </mesh>
-      <ContactShadows position={[0, 0.001, 0]} opacity={0.45} scale={14} blur={2.6} far={4.2} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0.1]}>
+        <circleGeometry args={[1.7, 40]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.35} depthWrite={false} />
+      </mesh>
     </>
   );
 }

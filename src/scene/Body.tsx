@@ -179,12 +179,43 @@ function Interior({
 export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => void; onComputer: () => void }) {
   const geo = useMemo(bodyGeometry, []);
   const paint = useRef<THREE.MeshPhysicalMaterial>(null);
-  const ghost = useRef<THREE.MeshPhysicalMaterial>(null);
   const shell = useRef<THREE.Mesh>(null);
   const open = useRef(isOpen(mode) ? 1 : 0);
-  const paintColor = useMemo(() => new THREE.Color("#f3f1eb"), []);
-  const ghostColor = useMemo(() => new THREE.Color("#d5e2ef"), []);
   const interior = useRef<THREE.Group>(null);
+  const fresnel = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        toneMapped: false,
+        side: THREE.DoubleSide,
+        uniforms: { uOpen: { value: 0 } },
+        vertexShader: `
+          varying vec3 vNormal;
+          varying vec3 vWorld;
+          void main() {
+            vec4 world = modelMatrix * vec4(position, 1.0);
+            vWorld = world.xyz;
+            vNormal = normalize(mat3(modelMatrix) * normal);
+            gl_Position = projectionMatrix * viewMatrix * world;
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vNormal;
+          varying vec3 vWorld;
+          uniform float uOpen;
+          void main() {
+            vec3 normal = normalize(vNormal);
+            vec3 viewDir = normalize(cameraPosition - vWorld);
+            float rim = pow(1.0 - abs(dot(normal, viewDir)), 5.0);
+            float alpha = rim * uOpen * 0.95;
+            if (alpha < 0.03) discard;
+            gl_FragColor = vec4(0.90, 0.94, 0.98, alpha);
+          }
+        `,
+      }),
+    [],
+  );
   const glassMat = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
@@ -226,10 +257,7 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
       paint.current.transparent = amount > 0.02;
       paint.current.depthWrite = amount < 0.85;
     }
-    if (ghost.current) {
-      ghost.current.opacity = amount * 0.22;
-      ghost.current.color.copy(paintColor).lerp(ghostColor, amount);
-    }
+    fresnel.uniforms.uOpen.value = amount;
     glassMat.opacity = 0.78 * (1 - amount);
     const cabin = Math.max(0, Math.min(1, (amount - 0.25) / 0.75));
     clothMat.opacity = cabin;
@@ -268,20 +296,7 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
           reflectivity={0.5}
         />
       </mesh>
-      <mesh geometry={geo} scale={[1.008, 1.008, 1.012]} raycast={() => undefined}>
-        <meshPhysicalMaterial
-          ref={ghost}
-          color="#d5e2ef"
-          metalness={0.04}
-          roughness={0.06}
-          transmission={0.94}
-          thickness={0.55}
-          transparent
-          opacity={0}
-          depthWrite={false}
-          ior={1.4}
-        />
-      </mesh>
+      <mesh geometry={geo} material={fresnel} raycast={() => undefined} />
       <Glass material={glassMat} />
       <Lamps />
       <Interior cloth={clothMat} wheel={wheelMat} screen={screenMat} onComputer={onComputer} group={interior} />

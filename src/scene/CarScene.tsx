@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Bloom, EffectComposer, Noise, Vignette } from "@react-three/postprocessing";
+import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { Mode, SceneControl } from "../model";
@@ -115,10 +115,9 @@ function SceneContents({
       <Cooling mode={control.mode} valve={control.valve} assist={control.assist} onSelect={() => onSelect("cooling")} />
       <Computers mode={control.mode} assist={control.assist} onSelect={() => onSelect("computers")} />
       <CameraRig mode={control.mode} resetToken={resetToken} />
-      <EffectComposer multisampling={0}>
-        <Bloom luminanceThreshold={1.05} mipmapBlur intensity={0.45} radius={0.45} />
-        <Noise opacity={0.018} />
-        <Vignette eskil={false} offset={0.18} darkness={0.72} />
+      <EffectComposer multisampling={0} enableNormalPass={false}>
+        <Bloom luminanceThreshold={1.15} mipmapBlur intensity={0.35} radius={0.4} />
+        <Vignette eskil={false} offset={0.15} darkness={0.55} />
       </EffectComposer>
     </>
   );

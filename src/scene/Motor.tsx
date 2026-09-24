@@ -71,11 +71,13 @@ export function Motor({
     const heat = mode === "motor" ? motor : 0.2;
     if (rotor.current) rotor.current.rotation.z = spin.current.rotor;
     if (housing.current) {
-      housing.current.opacity = THREE.MathUtils.lerp(0.92, 0.14, glow.current);
-      housing.current.transmission = THREE.MathUtils.lerp(0.001, 0.85, glow.current);
-      housing.current.transparent = true;
+      const shellOpacity = mode === "motor" ? 0.07 : mode === "inside" ? 0.2 : mode === "overview" ? 0.95 : 0.12;
+      housing.current.opacity = shellOpacity;
+      housing.current.transmission = 0;
+      housing.current.transparent = mode !== "overview";
+      housing.current.depthWrite = mode === "overview";
     }
-    copperMat.emissiveIntensity = 0.15 + heat * glow.current * 2.4;
+    copperMat.emissiveIntensity = 0.35 + heat * glow.current * 4.5;
     if (oil.current) oil.current.emissiveIntensity = 0.05 + heat * glow.current * 2.2;
     fieldMat.opacity = glow.current * (0.18 + heat * 0.82);
   });
@@ -146,10 +148,16 @@ export function Motor({
           })}
           {curves.map((curve, index) => (
             <mesh key={index} material={fieldMat}>
-              <tubeGeometry args={[curve, 18, 0.005, 6, false]} />
+              <tubeGeometry args={[curve, 20, 0.012, 6, false]} />
             </mesh>
           ))}
         </group>
+        <pointLight
+          position={[0, 0.35, 0.45]}
+          intensity={mode === "motor" ? 8 : mode === "inside" ? 2 : 0}
+          distance={2.4}
+          color="#ffd2a8"
+        />
         {mode === "motor" || mode === "inside" ? (
           <Tag position={[0, 0.42, 0]} active={mode === "motor"} onClick={onSelect}>
             Rear motor

@@ -61,7 +61,7 @@ export function Battery({
   useFrame((state, dt) => {
     glow.current = damp(glow.current, target, dt, 5);
     if (shell.current) {
-      shell.current.opacity = THREE.MathUtils.lerp(0.88, 0.18, glow.current);
+      shell.current.opacity = mode === "battery" ? 0.08 : mode === "inside" ? 0.28 : 0.55;
       shell.current.transparent = true;
     }
     if (sill.current) {
@@ -114,7 +114,7 @@ export function Battery({
       <group position={[0.72, 0.3, 0]}>
         <instancedMesh ref={cells} args={[undefined, undefined, COUNT]}>
           <cylinderGeometry args={[0.0095, 0.0095, 0.07, 10]} />
-          <meshStandardMaterial color="#8ea394" roughness={0.45} metalness={0.35} />
+          <meshStandardMaterial color="#d7fff1" emissive="#7dffe4" emissiveIntensity={0.65} roughness={0.4} metalness={0.15} toneMapped={false} />
         </instancedMesh>
         {Array.from({ length: ROWS - 1 }, (_, row) => (
           <mesh key={row} position={[0, 0, (row - (ROWS - 2) / 2) * PITCH_Z]}>
