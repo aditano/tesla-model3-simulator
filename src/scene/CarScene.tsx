@@ -15,6 +15,7 @@ import { Battery } from "./Battery";
 import { Penthouse } from "./Penthouse";
 import { Cooling } from "./Cooling";
 import { Computers } from "./Computers";
+import { Callouts } from "./Callouts";
 
 function Drivetrain({
   control,
@@ -114,10 +115,11 @@ function SceneContents({
       <Penthouse mode={control.mode} soc={control.soc} onSelect={() => onSelect("penthouse")} />
       <Cooling mode={control.mode} valve={control.valve} assist={control.assist} onSelect={() => onSelect("cooling")} />
       <Computers mode={control.mode} assist={control.assist} onSelect={() => onSelect("computers")} />
+      <Callouts mode={control.mode} onSelect={onSelect} />
       <CameraRig mode={control.mode} resetToken={resetToken} />
       <EffectComposer multisampling={0} enableNormalPass={false}>
-        <Bloom luminanceThreshold={0.9} mipmapBlur intensity={0.55} radius={0.45} />
-        <Vignette eskil={false} offset={0.15} darkness={0.55} />
+        <Bloom luminanceThreshold={0.92} mipmapBlur intensity={0.42} radius={0.4} />
+        <Vignette eskil={false} offset={0.22} darkness={0.42} />
       </EffectComposer>
     </>
   );
@@ -135,12 +137,12 @@ export function CarScene({
   const pose = POSE.overview;
   return (
     <Canvas
-      camera={{ position: pose.pos, fov: 28, near: 0.05, far: 40 }}
+      camera={{ position: pose.pos, fov: 32, near: 0.05, far: 50 }}
       dpr={[1, 1.6]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.12;
+        gl.toneMappingExposure = 1.05;
       }}
     >
       <Suspense fallback={null}>

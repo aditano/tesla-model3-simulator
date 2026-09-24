@@ -8,8 +8,8 @@ export const REAR_X = FRONT_X - 2.875;
 export const HALF_TRACK = 0.79;
 
 export const POSE: Record<Mode, { pos: [number, number, number]; target: [number, number, number] }> = {
-  overview: { pos: [2.55, 0.98, 3.7], target: [-0.35, 0.62, 0] },
-  inside: { pos: [2.4, 1.35, 3.15], target: [-0.2, 0.55, 0] },
+  overview: { pos: [2.7, 2.15, 5.15], target: [0.05, 0.42, 0] },
+  inside: { pos: [2.35, 1.85, 4.15], target: [0.05, 0.48, 0] },
   motor: { pos: [-0.55, 0.95, 0.72], target: [REAR_X, 0.38, 0] },
   battery: { pos: [1.15, 1.15, 1.05], target: [0.55, 0.32, 0] },
   penthouse: { pos: [-2.85, 1.05, 1.45], target: [-1.85, 0.4, 0.1] },

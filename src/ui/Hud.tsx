@@ -68,79 +68,126 @@ export function Hud({
     );
   }
 
+  const stats = chips(mode, motor, flow, soc, valve, assist);
+
   return (
     <>
-      <div className="panel" style={{ "--accent": accent } as CSSProperties}>
-        <div className="block">
-          <p className="brand">Model 3 · unofficial schematic</p>
-          <p className="kicker">{story.kicker}</p>
-          <h1>{story.title}</h1>
-          <p className="lede" aria-live="polite">
-            {touched ? story.after : story.before}
+      <header className="mast">
+        <p className="brand">Unofficial schematic</p>
+        <h1>
+          Model 3
+          <span>Systems</span>
+        </h1>
+        <p className="lede" aria-live="polite">
+          {touched ? story.after : story.before}
+        </p>
+      </header>
+
+      <div className="chips" aria-label="Live readouts">
+        {stats.map((stat) => (
+          <p key={stat.label}>
+            <span>{stat.label}</span>
+            <b>{stat.value}</b>
           </p>
-          <Control
-            mode={mode}
-            motor={motor}
-            flow={flow}
-            soc={soc}
-            valve={valve}
-            assist={assist}
-            onMode={onMode}
-            onMotor={onMotor}
-            onFlow={onFlow}
-            onSoc={onSoc}
-            onValve={onValve}
-            onAssist={onAssist}
-          />
-          <Readout mode={mode} motor={motor} flow={flow} soc={soc} valve={valve} assist={assist} />
-          <nav className="nav" aria-label="Systems">
-            {NAV.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={item.id === mode ? "nav-item on" : "nav-item"}
-                aria-pressed={item.id === mode}
-                onClick={() => onMode(item.id)}
-              >
-                <span>{item.label}</span>
-                <kbd>{item.key}</kbd>
-              </button>
-            ))}
-          </nav>
-          <button type="button" className="text-btn" aria-expanded={deeper} onClick={() => onDeeper(!deeper)}>
-            {deeper ? "Hide the notes" : "Why it’s drawn this way"}
-          </button>
-          {deeper ? (
-            <div className="deeper">
-              {story.deeper.map((note) => (
-                <section key={note.heading}>
-                  <h2>{note.heading}</h2>
-                  <p>{note.body}</p>
-                  <p className="cites">
-                    {note.sources.map((id) => (
-                      <Cite key={id} id={id} />
-                    ))}
-                  </p>
-                </section>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        ))}
       </div>
 
-      <div className="chrome">
-        <button type="button" className="ghost" onClick={() => onSources(true)}>
-          Sources
-        </button>
-        <button type="button" className="ghost" onClick={onReset}>
-          Reset view
-        </button>
-      </div>
+      <aside className="glass" style={{ "--accent": accent } as CSSProperties}>
+        <div className="glass-head">
+          <p>{story.kicker}</p>
+          <button type="button" className="icon" aria-expanded={deeper} aria-label="How this is drawn" onClick={() => onDeeper(!deeper)}>
+            i
+          </button>
+        </div>
+        <div className="seg-label">Body</div>
+        <div className="segmented row" role="radiogroup" aria-label="Body">
+          <button type="button" role="radio" aria-checked={mode === "overview"} className={mode === "overview" ? "on" : ""} onClick={() => onMode("overview")}>
+            Assembled
+          </button>
+          <button type="button" role="radio" aria-checked={mode !== "overview"} className={mode !== "overview" ? "on" : ""} onClick={() => onMode(mode === "overview" ? "inside" : mode)}>
+            Open
+          </button>
+        </div>
+        <div className="seg-label">System</div>
+        <div className="segmented systems" role="radiogroup" aria-label="System">
+          {NAV.filter((item) => item.id !== "overview" && item.id !== "inside").map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="radio"
+              aria-checked={item.id === mode}
+              className={item.id === mode ? "on" : ""}
+              onClick={() => onMode(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <Control
+          mode={mode}
+          motor={motor}
+          flow={flow}
+          soc={soc}
+          valve={valve}
+          assist={assist}
+          onMotor={onMotor}
+          onFlow={onFlow}
+          onSoc={onSoc}
+          onValve={onValve}
+          onAssist={onAssist}
+        />
+        <div className="glass-foot">
+          <button type="button" className="text-btn" onClick={() => onSources(true)}>
+            Sources
+          </button>
+          <button type="button" className="text-btn" onClick={onReset}>
+            Reset view
+          </button>
+        </div>
+      </aside>
+
+      <nav className="film" aria-label="Systems">
+        {NAV.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={item.id === mode ? "frame on" : "frame"}
+            aria-pressed={item.id === mode}
+            onClick={() => onMode(item.id)}
+          >
+            <i style={{ background: accentFor(item.id) }} />
+            <span>{item.label}</span>
+            <kbd>{item.key}</kbd>
+          </button>
+        ))}
+      </nav>
 
       <p className="schematic">{mode === "overview" ? "Silhouette, not a factory surface" : "Schematic, not to scale"}</p>
-      <p className="keys">
-        Drag orbit · pinch zoom · 0–5 systems · [ ] nudge · R reset · / hide
-      </p>
+
+      {deeper ? (
+        <div className="sources" role="dialog" aria-modal="true" aria-labelledby="lesson-title">
+          <div className="sources-card">
+            <header>
+              <h2 id="lesson-title">{story.title}</h2>
+              <button type="button" className="ghost" onClick={() => onDeeper(false)}>
+                Close
+              </button>
+            </header>
+            <p className="lede tight">{touched ? story.after : story.before}</p>
+            {story.deeper.map((note) => (
+              <section key={note.heading} className="deeper">
+                <h2>{note.heading}</h2>
+                <p>{note.body}</p>
+                <p className="cites">
+                  {note.sources.map((id) => (
+                    <Cite key={id} id={id} />
+                  ))}
+                </p>
+              </section>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {sourcesOpen ? (
         <div className="sources" role="dialog" aria-modal="true" aria-labelledby="sources-title">
@@ -190,7 +237,6 @@ function Control({
   soc,
   valve,
   assist,
-  onMode,
   onMotor,
   onFlow,
   onSoc,
@@ -203,7 +249,6 @@ function Control({
   soc: number;
   valve: ValveId;
   assist: number;
-  onMode: (mode: Mode) => void;
   onMotor: (value: number) => void;
   onFlow: (value: number) => void;
   onSoc: (value: number) => void;
@@ -212,13 +257,9 @@ function Control({
 }) {
   switch (mode) {
     case "overview":
-      return (
-        <button type="button" className="primary" onClick={() => onMode("inside")}>
-          Make the body transparent
-        </button>
-      );
+      return <p className="hint">Drag to orbit. Open the body, then pick a system.</p>;
     case "inside":
-      return <p className="hint">Choose a system below, or click a label on the car.</p>;
+      return <p className="hint">Click a label on the car, or choose a system.</p>;
     case "motor":
       return <Slider label="Rotor" value={motor} minLabel="Still" maxLabel="Fast" onChange={onMotor} />;
     case "battery":
@@ -249,78 +290,6 @@ function Control({
       return neverMode;
     }
   }
-}
-
-function Readout({
-  mode,
-  motor,
-  flow,
-  soc,
-  valve,
-  assist,
-}: {
-  mode: Mode;
-  motor: number;
-  flow: number;
-  soc: number;
-  valve: ValveId;
-  assist: number;
-}) {
-  switch (mode) {
-    case "overview":
-    case "inside":
-      return null;
-    case "motor":
-      return (
-        <div className="readout">
-          <Stat label="Rotor" value={speedWord(motor)} />
-          <Stat label="Field" value={motor < 0.08 ? "Quiet" : "Locked"} />
-          <Stat label="Rear wheel" value={motor < 0.08 ? "Still" : "Slower"} />
-        </div>
-      );
-    case "battery":
-      return (
-        <div className="readout">
-          <Stat label="Collectors" value={flowWord(flow)} />
-          <Stat label="Cells" value={flow < 0.08 ? "Resting" : "Filling"} />
-        </div>
-      );
-    case "penthouse":
-      return (
-        <div className="readout">
-          <Stat label="State of charge" value={`${Math.round(soc * 100)}%`} />
-          <Stat label="Incoming flow" value={socFlowWord(soc)} />
-        </div>
-      );
-    case "cooling":
-      return (
-        <div className="readout">
-          <Stat label="Valve" value={valves.find((item) => item.id === valve)?.label ?? valve} />
-          <Stat label="Glycol" value="Blue" />
-          <Stat label="Stator oil" value="Amber" />
-        </div>
-      );
-    case "computers":
-      return (
-        <div className="readout">
-          <Stat label="Cameras" value={assistWord(assist)} />
-          <Stat label="Computer coolant" value={assist < 0.2 ? "Calm" : "Moving"} />
-        </div>
-      );
-    default: {
-      const neverMode: never = mode;
-      return neverMode;
-    }
-  }
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <p>
-      <span>{label}</span>
-      <b>{value}</b>
-    </p>
-  );
 }
 
 function Slider({
@@ -354,6 +323,64 @@ function Slider({
       </span>
     </label>
   );
+}
+
+function chips(
+  mode: Mode,
+  motor: number,
+  flow: number,
+  soc: number,
+  valve: ValveId,
+  assist: number,
+): { label: string; value: string }[] {
+  switch (mode) {
+    case "overview":
+      return [
+        { label: "Body", value: "Sealed" },
+        { label: "Drive", value: "Rear" },
+        { label: "Pack", value: "2170" },
+      ];
+    case "inside":
+      return [
+        { label: "Body", value: "Open" },
+        { label: "Shell", value: "Glass" },
+        { label: "Scale", value: "Schematic" },
+      ];
+    case "motor":
+      return [
+        { label: "Rotor", value: speedWord(motor) },
+        { label: "Field", value: motor < 0.08 ? "Quiet" : "Locked" },
+        { label: "Rear wheel", value: motor < 0.08 ? "Still" : "Slower" },
+      ];
+    case "battery":
+      return [
+        { label: "Charge", value: flowWord(flow) },
+        { label: "Cells", value: flow < 0.08 ? "Resting" : "Filling" },
+        { label: "Pack", value: "2170" },
+      ];
+    case "penthouse":
+      return [
+        { label: "Charge", value: `${Math.round(soc * 100)}%` },
+        { label: "Incoming", value: socFlowWord(soc) },
+        { label: "Path", value: "AC to DC" },
+      ];
+    case "cooling":
+      return [
+        { label: "Valve", value: valves.find((item) => item.id === valve)?.label ?? valve },
+        { label: "Glycol", value: "Blue" },
+        { label: "Stator oil", value: "Amber" },
+      ];
+    case "computers":
+      return [
+        { label: "Cameras", value: assistWord(assist) },
+        { label: "Coolant", value: assist < 0.2 ? "Calm" : "Moving" },
+        { label: "Module", value: "Bulkhead" },
+      ];
+    default: {
+      const neverMode: never = mode;
+      return neverMode;
+    }
+  }
 }
 
 function accentFor(mode: Mode): string {

@@ -92,15 +92,19 @@ export function Motor({
           <cylinderGeometry args={[0.27, 0.27, 0.58, 64, 1, false, 0, Math.PI * 1.35]} />
           <meshPhysicalMaterial
             ref={housing}
-            color="#c5ced6"
-            metalness={0.82}
-            roughness={0.22}
-            clearcoat={0.6}
-            clearcoatRoughness={0.12}
+            color="#1c2128"
+            metalness={0.72}
+            roughness={0.28}
+            clearcoat={0.85}
+            clearcoatRoughness={0.08}
             transparent
             opacity={0.92}
             side={THREE.DoubleSide}
           />
+        </mesh>
+        <mesh position={[0, 0, 0.24]}>
+          <torusGeometry args={[0.255, 0.012, 10, 40]} />
+          <meshStandardMaterial color="#c6a36a" metalness={0.92} roughness={0.22} />
         </mesh>
         <mesh position={[0.34, 0.02, 0]}>
           <boxGeometry args={[0.14, 0.2, 0.28]} />
