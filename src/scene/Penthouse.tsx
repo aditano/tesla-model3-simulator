@@ -6,7 +6,6 @@ import type { Mode } from "../model";
 import { emphasis } from "../model";
 import { damp } from "./damp";
 import { PENTHOUSE } from "./layout";
-import { Tag } from "./tags";
 
 function Beads({
   points,
@@ -81,8 +80,6 @@ export function Penthouse({ mode, soc, onSelect }: { mode: Mode; soc: number; on
     onSelect();
   };
 
-  const show = mode === "penthouse" || mode === "inside";
-
   return (
     <group>
       <group position={PENTHOUSE} onClick={pick}>
@@ -103,21 +100,7 @@ export function Penthouse({ mode, soc, onSelect }: { mode: Mode; soc: number; on
         <Part position={[0.02, 0, -0.05]} size={[0.16, 0.1, 0.18]} color="#cfd6de" />
         <Part position={[0.02, 0, -0.28]} size={[0.1, 0.08, 0.1]} color="#e07a4c" />
         <Part position={[-0.02, 0, -0.48]} size={[0.22, 0.08, 0.16]} color="#9eb0c4" />
-        {show ? (
-          <Tag position={[0, 0.28, 0]} active={mode === "penthouse"} onClick={onSelect}>
-            Penthouse
-          </Tag>
-        ) : null}
-        {mode === "penthouse" ? (
-          <>
-            <Tag position={[0.02, 0.2, 0.32]}>Onboard charger</Tag>
-            <Tag position={[0.02, 0.18, -0.05]}>Contactors</Tag>
-            <Tag position={[0.02, 0.16, -0.28]}>Pyro disconnect</Tag>
-            <Tag position={[-0.02, 0.16, -0.48]}>HV controller</Tag>
-          </>
-        ) : null}
       </group>
-      {mode === "penthouse" ? <Tag position={[-2.22, 0.88, 0.78]}>Charge port · AC</Tag> : null}
       {(mode === "penthouse" || mode === "inside") && (
         <>
           <Beads points={AC} color="#ffbf7a" speed={0.22 * incoming} gain={mode === "penthouse" ? incoming : 0.25} />

@@ -77,7 +77,7 @@ function CameraRig({ mode, resetToken }: { mode: Mode; resetToken: number }) {
       enableDamping
       dampingFactor={0.08}
       enablePan
-      minDistance={2.5}
+      minDistance={0.7}
       maxDistance={9.5}
       maxPolarAngle={Math.PI / 2 - 0.04}
       minPolarAngle={0.28}
@@ -116,7 +116,7 @@ function SceneContents({
       <Computers mode={control.mode} assist={control.assist} onSelect={() => onSelect("computers")} />
       <CameraRig mode={control.mode} resetToken={resetToken} />
       <EffectComposer multisampling={0} enableNormalPass={false}>
-        <Bloom luminanceThreshold={1.15} mipmapBlur intensity={0.35} radius={0.4} />
+        <Bloom luminanceThreshold={0.9} mipmapBlur intensity={0.55} radius={0.45} />
         <Vignette eskil={false} offset={0.15} darkness={0.55} />
       </EffectComposer>
     </>
@@ -135,12 +135,12 @@ export function CarScene({
   const pose = POSE.overview;
   return (
     <Canvas
-      camera={{ position: pose.pos, fov: 32, near: 0.08, far: 40 }}
+      camera={{ position: pose.pos, fov: 28, near: 0.05, far: 40 }}
       dpr={[1, 1.6]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.05;
+        gl.toneMappingExposure = 1.12;
       }}
     >
       <Suspense fallback={null}>

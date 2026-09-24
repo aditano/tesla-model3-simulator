@@ -4,127 +4,8 @@ import type { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Mode } from "../model";
 import { isOpen } from "../model";
+import { createBodyGeometry, createGlassGeometry } from "./carMesh";
 import { damp } from "./damp";
-import { FRONT_X, REAR_X, WHEEL_R } from "./layout";
-
-function silhouette(): THREE.Shape {
-  const points: Array<[number, number]> = [
-    [2.3, 0.28],
-    [2.22, 0.5],
-    [1.85, 0.66],
-    [1.25, 0.76],
-    [0.78, 0.9],
-    [0.42, 1.18],
-    [0.05, 1.36],
-    [-0.45, 1.4],
-    [-0.95, 1.28],
-    [-1.35, 1.04],
-    [-1.72, 0.84],
-    [-2.12, 0.7],
-    [-2.34, 0.48],
-    [-2.38, 0.28],
-    [-2.28, 0.18],
-    [2.18, 0.18],
-    [2.3, 0.28],
-  ];
-  const curve = new THREE.CatmullRomCurve3(
-    points.map(([x, y]) => new THREE.Vector3(x, y, 0)),
-    false,
-    "catmullrom",
-    0.45,
-  );
-  const sampled = curve.getPoints(90);
-  const shape = new THREE.Shape();
-  shape.moveTo(sampled[0].x, sampled[0].y);
-  for (let i = 1; i < sampled.length; i += 1) {
-    shape.lineTo(sampled[i].x, sampled[i].y);
-  }
-  return shape;
-}
-
-function pinch(geo: THREE.BufferGeometry) {
-  const position = geo.attributes.position;
-  const vertex = new THREE.Vector3();
-  for (let i = 0; i < position.count; i += 1) {
-    vertex.fromBufferAttribute(position, i);
-    const height = THREE.MathUtils.smoothstep(vertex.y, 0.2, 1.22);
-    const front = THREE.MathUtils.smoothstep(vertex.x, 1.1, 2.3);
-    const rear = THREE.MathUtils.smoothstep(-vertex.x, 1.25, 2.38);
-    const skirt = 1 - THREE.MathUtils.smoothstep(vertex.y, 0.18, 0.46);
-    const width = 1 - height * 0.2 - Math.max(front, rear) * 0.4 - skirt * 0.1;
-    position.setZ(i, vertex.z * Math.max(0.34, width));
-  }
-  position.needsUpdate = true;
-}
-
-function bodyGeometry(): THREE.BufferGeometry {
-  const depth = 1.7;
-  const geo = new THREE.ExtrudeGeometry(silhouette(), {
-    depth,
-    bevelEnabled: true,
-    bevelThickness: 0.04,
-    bevelSize: 0.045,
-    bevelSegments: 5,
-    curveSegments: 8,
-  });
-  geo.translate(0, 0, -depth / 2);
-  pinch(geo);
-  geo.computeVertexNormals();
-  return geo;
-}
-
-const GLASS_PANELS: Array<{
-  position: [number, number, number];
-  rotation: [number, number, number];
-  size: [number, number, number];
-}> = [
-  { position: [0.62, 1.12, 0], rotation: [0, 0, -0.55], size: [0.025, 0.62, 1.22] },
-  { position: [-0.28, 1.385, 0], rotation: [0, 0, -0.04], size: [1.15, 0.02, 1.12] },
-  { position: [-1.22, 1.12, 0], rotation: [0, 0, 0.58], size: [0.025, 0.5, 1.12] },
-  { position: [-0.15, 1.08, 0.7], rotation: [0, 0, -0.04], size: [1.15, 0.28, 0.02] },
-  { position: [-0.15, 1.08, -0.7], rotation: [0, 0, -0.04], size: [1.15, 0.28, 0.02] },
-];
-
-function Glass({ material }: { material: THREE.MeshPhysicalMaterial }) {
-  return (
-    <group>
-      {GLASS_PANELS.map((panel) => (
-        <mesh
-          key={panel.position.join(",")}
-          position={panel.position}
-          rotation={panel.rotation}
-          raycast={() => undefined}
-          material={material}
-        >
-          <boxGeometry args={panel.size} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function Lamps() {
-  return (
-    <group>
-      {[0.52, -0.52].map((z) => (
-        <mesh key={z} position={[2.2, 0.58, z]} raycast={() => undefined}>
-          <boxGeometry args={[0.045, 0.07, 0.32]} />
-          <meshStandardMaterial color="#f4f7fb" emissive="#e7f1ff" emissiveIntensity={1.6} toneMapped={false} />
-        </mesh>
-      ))}
-      {[0.58, -0.58].map((z) => (
-        <mesh key={`tail-${z}`} position={[-2.28, 0.62, z]} raycast={() => undefined}>
-          <boxGeometry args={[0.04, 0.08, 0.34]} />
-          <meshStandardMaterial color="#3a1014" emissive="#ff4d55" emissiveIntensity={0.7} toneMapped={false} />
-        </mesh>
-      ))}
-      <mesh position={[-2.22, 0.7, 0.78]} rotation={[0, 0, Math.PI / 2]} raycast={() => undefined}>
-        <cylinderGeometry args={[0.055, 0.055, 0.03, 20]} />
-        <meshStandardMaterial color="#1b1e24" metalness={0.6} roughness={0.35} />
-      </mesh>
-    </group>
-  );
-}
 
 function Interior({
   cloth,
@@ -141,100 +22,105 @@ function Interior({
 }) {
   return (
     <group ref={group} visible={false}>
-      <mesh position={[0.15, 0.48, 0.38]} material={cloth} raycast={() => undefined}>
-        <boxGeometry args={[0.48, 0.4, 0.46]} />
+      <mesh position={[0.12, 0.55, 0.34]} material={cloth} raycast={() => undefined}>
+        <boxGeometry args={[0.46, 0.42, 0.42]} />
       </mesh>
-      <mesh position={[0.15, 0.48, -0.38]} material={cloth} raycast={() => undefined}>
-        <boxGeometry args={[0.48, 0.4, 0.46]} />
+      <mesh position={[0.12, 0.55, -0.34]} material={cloth} raycast={() => undefined}>
+        <boxGeometry args={[0.46, 0.42, 0.42]} />
       </mesh>
-      <mesh position={[-0.85, 0.5, 0]} material={cloth} raycast={() => undefined}>
-        <boxGeometry args={[0.55, 0.42, 1.15]} />
+      <mesh position={[-0.72, 0.58, 0]} material={cloth} raycast={() => undefined}>
+        <boxGeometry args={[0.5, 0.4, 1.05]} />
       </mesh>
       <mesh
-        position={[0.48, 0.78, 0.38]}
-        rotation={[Math.PI / 2.4, 0, 0]}
+        position={[0.42, 0.78, 0.32]}
+        rotation={[Math.PI / 2.15, 0.15, 0]}
         material={wheel}
         onClick={(event: ThreeEvent<MouseEvent>) => {
           event.stopPropagation();
           onComputer();
         }}
       >
-        <torusGeometry args={[0.16, 0.018, 8, 20]} />
+        <torusGeometry args={[0.15, 0.016, 10, 24]} />
       </mesh>
       <mesh
-        position={[0.55, 0.92, -0.28]}
-        rotation={[0, 0.4, -0.15]}
+        position={[0.48, 0.92, -0.22]}
+        rotation={[0.1, 0.35, -0.08]}
         material={screen}
         onClick={(event: ThreeEvent<MouseEvent>) => {
           event.stopPropagation();
           onComputer();
         }}
       >
-        <boxGeometry args={[0.04, 0.18, 0.36]} />
+        <boxGeometry args={[0.02, 0.16, 0.28]} />
       </mesh>
     </group>
   );
 }
 
 export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => void; onComputer: () => void }) {
-  const geo = useMemo(bodyGeometry, []);
-  const paint = useRef<THREE.MeshPhysicalMaterial>(null);
+  const body = useMemo(createBodyGeometry, []);
+  const glassGeo = useMemo(createGlassGeometry, []);
   const shell = useRef<THREE.Mesh>(null);
+  const clearShell = useRef<THREE.Mesh>(null);
   const open = useRef(isOpen(mode) ? 1 : 0);
   const interior = useRef<THREE.Group>(null);
-  const fresnel = useMemo(
+  const paint = useMemo(
     () =>
-      new THREE.ShaderMaterial({
+      new THREE.MeshPhysicalMaterial({
+        color: "#f4f1ea",
+        metalness: 0.06,
+        roughness: 0.12,
+        clearcoat: 1,
+        clearcoatRoughness: 0.025,
+        envMapIntensity: 1.7,
+        sheen: 0.35,
+        sheenColor: new THREE.Color("#fffaf4"),
+        sheenRoughness: 0.35,
+      }),
+    [],
+  );
+  const clear = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: "#e7eef6",
+        metalness: 0,
+        roughness: 0.04,
+        transmission: 1,
+        thickness: 0.03,
+        ior: 1.12,
         transparent: true,
+        opacity: 0,
+        envMapIntensity: 1.5,
+        attenuationColor: new THREE.Color("#ffffff"),
+        attenuationDistance: 12,
+        side: THREE.FrontSide,
         depthWrite: false,
-        toneMapped: false,
-        side: THREE.DoubleSide,
-        uniforms: { uOpen: { value: 0 } },
-        vertexShader: `
-          varying vec3 vNormal;
-          varying vec3 vWorld;
-          void main() {
-            vec4 world = modelMatrix * vec4(position, 1.0);
-            vWorld = world.xyz;
-            vNormal = normalize(mat3(modelMatrix) * normal);
-            gl_Position = projectionMatrix * viewMatrix * world;
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vNormal;
-          varying vec3 vWorld;
-          uniform float uOpen;
-          void main() {
-            vec3 normal = normalize(vNormal);
-            vec3 viewDir = normalize(cameraPosition - vWorld);
-            float rim = pow(1.0 - abs(dot(normal, viewDir)), 5.0);
-            float alpha = rim * uOpen * 0.95;
-            if (alpha < 0.03) discard;
-            gl_FragColor = vec4(0.90, 0.94, 0.98, alpha);
-          }
-        `,
       }),
     [],
   );
   const glassMat = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
-        color: "#10141a",
-        roughness: 0.08,
-        metalness: 0.15,
-        transparent: true,
-        opacity: 0.78,
-        transmission: 0.4,
+        color: "#0c1218",
+        roughness: 0.02,
+        metalness: 0,
+        transmission: 1,
         thickness: 0.2,
+        ior: 1.5,
+        transparent: true,
+        opacity: 1,
+        envMapIntensity: 1.4,
+        attenuationColor: new THREE.Color("#0a1016"),
+        attenuationDistance: 0.45,
       }),
     [],
   );
   const clothMat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: "#2a2d33", roughness: 0.85, transparent: true, opacity: 0 }),
+    () => new THREE.MeshStandardMaterial({ color: "#23262c", roughness: 0.9, transparent: true, opacity: 0 }),
     [],
   );
   const wheelMat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: "#c8c4bc", metalness: 0.8, roughness: 0.3, transparent: true, opacity: 0 }),
+    () => new THREE.MeshStandardMaterial({ color: "#c8c4bc", metalness: 0.85, roughness: 0.25, transparent: true, opacity: 0 }),
     [],
   );
   const screenMat = useMemo(
@@ -242,7 +128,7 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
       new THREE.MeshStandardMaterial({
         color: "#07080c",
         emissive: "#9fb4ff",
-        emissiveIntensity: 0.35,
+        emissiveIntensity: 0.45,
         transparent: true,
         opacity: 0,
       }),
@@ -250,82 +136,103 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
   );
 
   useFrame((_, dt) => {
-    open.current = damp(open.current, isOpen(mode) ? 1 : 0, dt, 4.5);
+    open.current = damp(open.current, isOpen(mode) ? 1 : 0, dt, 3.2);
     const amount = open.current;
-    if (paint.current) {
-      paint.current.opacity = 1 - amount;
-      paint.current.transparent = amount > 0.02;
-      paint.current.depthWrite = amount < 0.85;
-    }
-    fresnel.uniforms.uOpen.value = amount;
-    glassMat.opacity = 0.78 * (1 - amount);
-    const cabin = Math.max(0, Math.min(1, (amount - 0.25) / 0.75));
+    paint.opacity = 1 - amount;
+    paint.transparent = amount > 0.02;
+    paint.depthWrite = amount < 0.35;
+    clear.opacity = Math.min(1, amount * 1.15);
+    clear.depthWrite = false;
+    clear.thickness = 0.03;
+    clear.roughness = 0.02;
+    glassMat.roughness = amount > 0.5 ? 0.02 : 0.04;
+    glassMat.thickness = amount > 0.5 ? 0.03 : 0.2;
+    glassMat.color.set(amount > 0.5 ? "#d5e0ea" : "#0c1218");
+    glassMat.attenuationColor.set(amount > 0.5 ? "#ffffff" : "#0a1016");
+    glassMat.attenuationDistance = THREE.MathUtils.lerp(0.45, 12, amount);
+    glassMat.depthWrite = amount < 0.5;
+    glassMat.opacity = 1;
+    const cabin = Math.max(0, Math.min(1, (amount - 0.2) / 0.8));
     clothMat.opacity = cabin;
     wheelMat.opacity = cabin;
     screenMat.opacity = cabin;
     if (interior.current) interior.current.visible = cabin > 0.04;
     if (shell.current) {
-      shell.current.raycast = amount > 0.55 ? () => undefined : THREE.Mesh.prototype.raycast;
+      shell.current.visible = amount < 0.97;
+      shell.current.raycast = amount > 0.45 ? () => undefined : THREE.Mesh.prototype.raycast;
     }
+    if (clearShell.current) clearShell.current.visible = amount > 0.02;
   });
 
   return (
     <group>
       <mesh
         ref={shell}
-        geometry={geo}
-        castShadow
+        geometry={body}
+        material={paint}
         onClick={(event: ThreeEvent<MouseEvent>) => {
           event.stopPropagation();
-          if (open.current < 0.55) onOpen();
+          if (open.current < 0.45) onOpen();
         }}
         onPointerOver={() => {
-          if (open.current < 0.55) document.body.style.cursor = "pointer";
+          if (open.current < 0.45) document.body.style.cursor = "pointer";
         }}
         onPointerOut={() => {
           document.body.style.cursor = "";
         }}
-      >
-        <meshPhysicalMaterial
-          ref={paint}
-          color="#f3f1eb"
-          metalness={0.62}
-          roughness={0.28}
-          clearcoat={1}
-          clearcoatRoughness={0.08}
-          reflectivity={0.5}
-        />
-      </mesh>
-      <mesh geometry={geo} material={fresnel} raycast={() => undefined} />
-      <Glass material={glassMat} />
+      />
+      <mesh ref={clearShell} geometry={body} material={clear} scale={1.004} visible={false} raycast={() => undefined} />
+      <mesh geometry={glassGeo} material={glassMat} raycast={() => undefined} />
       <Lamps />
+      <Mirrors />
       <Interior cloth={clothMat} wheel={wheelMat} screen={screenMat} onComputer={onComputer} group={interior} />
-      <Arch x={FRONT_X} />
-      <Arch x={REAR_X} />
-      <mesh position={[0.35, 0.86, 0.92]} rotation={[0.1, 0, -0.4]} raycast={() => undefined}>
-        <boxGeometry args={[0.18, 0.1, 0.08]} />
-        <meshStandardMaterial color="#f3f1eb" metalness={0.5} roughness={0.3} />
+    </group>
+  );
+}
+
+function Lamps() {
+  return (
+    <group>
+      {[0.62, -0.62].map((z) => (
+        <group key={z} position={[2.02, 0.5, z]} rotation={[0, z > 0 ? -0.5 : 0.5, 0]}>
+          <mesh position={[-0.02, 0, 0]} raycast={() => undefined}>
+            <boxGeometry args={[0.12, 0.055, 0.42]} />
+            <meshStandardMaterial color="#14171c" metalness={0.45} roughness={0.32} />
+          </mesh>
+          <mesh position={[0.03, 0, 0]} raycast={() => undefined}>
+            <boxGeometry args={[0.04, 0.028, 0.32]} />
+            <meshStandardMaterial color="#f7fbff" emissive="#f4f8ff" emissiveIntensity={4} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[-2.2, 0.58, 0]} raycast={() => undefined}>
+        <boxGeometry args={[0.035, 0.028, 1.05]} />
+        <meshStandardMaterial color="#2a0c10" emissive="#ff3340" emissiveIntensity={2.2} toneMapped={false} />
       </mesh>
-      <mesh position={[0.35, 0.86, -0.92]} rotation={[0.1, 0, 0.4]} raycast={() => undefined}>
-        <boxGeometry args={[0.18, 0.1, 0.08]} />
-        <meshStandardMaterial color="#f3f1eb" metalness={0.5} roughness={0.3} />
+      <mesh position={[2.18, 0.24, 0]} raycast={() => undefined}>
+        <boxGeometry args={[0.08, 0.08, 1.2]} />
+        <meshStandardMaterial color="#101216" roughness={0.55} metalness={0.25} />
+      </mesh>
+      <mesh position={[-2.16, 0.64, 0.72]} rotation={[0, 0.4, Math.PI / 2]} raycast={() => undefined}>
+        <cylinderGeometry args={[0.045, 0.045, 0.02, 20]} />
+        <meshStandardMaterial color="#1a1d22" metalness={0.7} roughness={0.28} />
       </mesh>
     </group>
   );
 }
 
-function Arch({ x }: { x: number }) {
+function Mirrors() {
   return (
     <group>
       {[1, -1].map((side) => (
-        <group key={side} position={[x, WHEEL_R, side * 0.78]}>
-          <mesh rotation={[Math.PI / 2, 0, 0]} raycast={() => undefined}>
-            <circleGeometry args={[0.4, 28]} />
-            <meshBasicMaterial color="#05060a" />
+        <group key={side} position={[0.42, 0.98, side * 1.02]}>
+          <mesh rotation={[0, 0, Math.PI / 2]} raycast={() => undefined}>
+            <capsuleGeometry args={[0.035, 0.12, 4, 8]} />
+            <meshPhysicalMaterial color="#f6f3ec" metalness={0.04} roughness={0.2} clearcoat={1} clearcoatRoughness={0.05} />
           </mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, side * 0.06, 0]}>
-            <torusGeometry args={[0.4, 0.028, 8, 24, Math.PI]} />
-            <meshStandardMaterial color="#f7f5ef" metalness={0.45} roughness={0.32} />
+          <mesh position={[0.02, 0, side * 0.08]} raycast={() => undefined}>
+            <boxGeometry args={[0.08, 0.06, 0.1]} />
+            <meshStandardMaterial color="#0e1218" roughness={0.15} metalness={0.4} />
           </mesh>
         </group>
       ))}

@@ -53,7 +53,7 @@ export function FlowTube({
     map.offset.x = (map.offset.x - dt * speed) % 1;
     if (material.current) {
       material.current.opacity = Math.max(0, Math.min(1, gain));
-      material.current.emissiveIntensity = 0.35 + gain * 1.8;
+      material.current.emissiveIntensity = 0.8 + gain * 3.2;
     }
   });
 

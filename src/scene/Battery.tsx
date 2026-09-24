@@ -6,8 +6,6 @@ import { RoundedBox } from "@react-three/drei";
 import type { Mode } from "../model";
 import { emphasis } from "../model";
 import { damp } from "./damp";
-import { Tag } from "./tags";
-
 const COLS = 16;
 const ROWS = 8;
 const COUNT = COLS * ROWS;
@@ -113,7 +111,7 @@ export function Battery({
       )}
       <group position={[0.72, 0.3, 0]}>
         <instancedMesh ref={cells} args={[undefined, undefined, COUNT]}>
-          <cylinderGeometry args={[0.0095, 0.0095, 0.07, 10]} />
+          <cylinderGeometry args={[0.011, 0.011, 0.085, 12]} />
           <meshStandardMaterial color="#d7fff1" emissive="#7dffe4" emissiveIntensity={0.65} roughness={0.4} metalness={0.15} toneMapped={false} />
         </instancedMesh>
         {Array.from({ length: ROWS - 1 }, (_, row) => (
@@ -127,24 +125,6 @@ export function Battery({
           <meshStandardMaterial color="#c9845a" emissive="#e7a36a" emissiveIntensity={0.7 + flow} metalness={0.6} roughness={0.3} toneMapped={false} />
         </mesh>
       </group>
-      {(mode === "battery" || mode === "inside") && (
-        <Tag position={[-0.15, 0.55, 0]} active={mode === "battery"} onClick={onSelect}>
-          2170 pack
-        </Tag>
-      )}
-      {mode === "battery"
-        ? MODULES.map((module) => (
-            <Tag key={module.series + module.x} position={[module.x, 0.46, 0.78]}>
-              {module.series}
-            </Tag>
-          ))
-        : null}
-      {mode === "battery" ? (
-        <>
-          <Tag position={[0.72, 0.52, 0]}>Parallel group — 46 in the real pack</Tag>
-          <Tag position={[-0.2, 0.5, -0.85]}>Bolted floor rails</Tag>
-        </>
-      ) : null}
     </group>
   );
 }

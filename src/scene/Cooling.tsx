@@ -7,7 +7,6 @@ import { emphasis, valveIndex } from "../model";
 import { damp } from "./damp";
 import { FlowTube } from "./flow";
 import { GLYCOL, OCTOVALVE, RADIATOR } from "./layout";
-import { Tag } from "./tags";
 
 function gains(valve: ValveId): { radiator: number; pack: number; powertrain: number; cabin: number; computer: number; reverse: boolean } {
   switch (valve) {
@@ -33,7 +32,6 @@ export function Cooling({ mode, valve, assist, onSelect }: { mode: Mode; valve: 
   const target = emphasis(mode, "cooling");
   const route = gains(valve);
   const sign = route.reverse ? -1 : 1;
-  const showTags = mode === "cooling";
   const computerGain = mode === "computers" ? 0.25 + assist * 0.75 : route.computer * (mode === "cooling" || mode === "inside" ? 1 : 0.2);
 
   useFrame((_, dt) => {
@@ -56,52 +54,61 @@ export function Cooling({ mode, valve, assist, onSelect }: { mode: Mode; valve: 
   return (
     <group>
       <group position={OCTOVALVE} onClick={pick}>
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
+          <torusGeometry args={[0.15, 0.016, 10, 48]} />
+          <meshStandardMaterial color="#d5dde6" metalness={0.88} roughness={0.18} />
+        </mesh>
         <mesh>
-          <cylinderGeometry args={[0.09, 0.09, 0.16, 24]} />
+          <cylinderGeometry args={[0.16, 0.16, 0.24, 48]} />
           <meshPhysicalMaterial
-            color="#d5dde6"
-            metalness={0.45}
-            roughness={0.2}
+            color="#e8eef5"
+            metalness={0.12}
+            roughness={0.04}
             transparent
-            opacity={mode === "cooling" ? 0.28 : 0.8}
-            transmission={mode === "cooling" ? 0.8 : 0}
+            opacity={mode === "cooling" ? 0.38 : 0.88}
+            transmission={mode === "cooling" ? 0.96 : 0.15}
+            thickness={0.2}
+            ior={1.45}
           />
         </mesh>
+        {[0, 1, 2, 3].map((tick) => {
+          const angle = (tick / 4) * Math.PI * 2;
+          return (
+            <mesh key={tick} position={[Math.cos(angle) * 0.15, 0.1, Math.sin(angle) * 0.15]}>
+              <boxGeometry args={[0.018, 0.006, 0.008]} />
+              <meshStandardMaterial color="#9aa3ad" metalness={0.7} roughness={0.28} />
+            </mesh>
+          );
+        })}
         <group ref={stem}>
           <mesh>
-            <cylinderGeometry args={[0.045, 0.045, 0.12, 16]} />
-            <meshStandardMaterial color="#8fd4ff" emissive="#9fd7ff" emissiveIntensity={1.2} toneMapped={false} />
+            <cylinderGeometry args={[0.05, 0.05, 0.2, 24]} />
+            <meshStandardMaterial color="#8fd4ff" emissive="#b7e6ff" emissiveIntensity={2.4} toneMapped={false} metalness={0.35} roughness={0.2} />
           </mesh>
-          {[0, 1, 2, 3].map((port) => (
-            <mesh key={port} position={[0.07, 0.03, (port - 1.5) * 0.035]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.012, 0.012, 0.06, 8]} />
-              <meshStandardMaterial color="#c5d0dc" metalness={0.6} roughness={0.3} />
-            </mesh>
-          ))}
-          {[0, 1, 2, 3].map((port) => (
-            <mesh key={`low-${port}`} position={[0.07, -0.03, (port - 1.5) * 0.035]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.012, 0.012, 0.06, 8]} />
-              <meshStandardMaterial color="#c5d0dc" metalness={0.6} roughness={0.3} />
-            </mesh>
-          ))}
+          <mesh position={[0.09, 0.09, 0]}>
+            <boxGeometry args={[0.045, 0.012, 0.012]} />
+            <meshStandardMaterial color="#f4fbff" emissive="#e7f6ff" emissiveIntensity={3} toneMapped={false} />
+          </mesh>
+          {[0, 1, 2, 3].map((port) => {
+            const angle = (port / 4) * Math.PI * 2;
+            return (
+              <mesh key={port} position={[Math.cos(angle) * 0.11, 0, Math.sin(angle) * 0.11]} rotation={[0, -angle, Math.PI / 2]}>
+                <cylinderGeometry args={[0.022, 0.018, 0.15, 14]} />
+                <meshStandardMaterial color="#d5e9f8" emissive="#9fd4ff" emissiveIntensity={mode === "cooling" ? 1.6 : 0.25} metalness={0.55} roughness={0.22} toneMapped={false} />
+              </mesh>
+            );
+          })}
         </group>
-        <mesh position={[0, -0.12, 0]}>
-          <boxGeometry args={[0.28, 0.06, 0.22]} />
-          <meshStandardMaterial color="#aeb6c0" metalness={0.75} roughness={0.28} />
+        <mesh position={[0, -0.14, 0]}>
+          <boxGeometry args={[0.32, 0.07, 0.24]} />
+          <meshStandardMaterial color="#b7c0ca" metalness={0.8} roughness={0.22} />
         </mesh>
-        {(showTags || mode === "inside") && (
-          <Tag position={[0, 0.24, 0]} active={mode === "cooling"} onClick={onSelect}>
-            Octovalve
-          </Tag>
-        )}
-        {showTags ? <Tag position={[0, -0.22, 0]}>Supermanifold</Tag> : null}
       </group>
 
       <mesh position={RADIATOR} onClick={pick}>
         <boxGeometry args={[0.06, 0.42, 1.05]} />
         <meshStandardMaterial color="#9aa8b5" emissive="#b7d4ea" emissiveIntensity={route.radiator * 0.5} metalness={0.55} roughness={0.35} />
       </mesh>
-      {showTags ? <Tag position={[RADIATOR[0], RADIATOR[1] + 0.32, 0]}>Radiator</Tag> : null}
 
       <mesh position={[0.78, 0.9, -0.12]}>
         <boxGeometry args={[0.28, 0.1, 0.22]} />
@@ -115,13 +122,11 @@ export function Cooling({ mode, valve, assist, onSelect }: { mode: Mode; valve: 
           opacity={0.45 + route.cabin * 0.55}
         />
       </mesh>
-      {showTags ? <Tag position={[0.78, 1.05, -0.12]}>Cabin heat</Tag> : null}
-
-      <FlowTube points={GLYCOL.radiator} color="#9fd4ff" speed={0.55 * sign} gain={loopGain(route.radiator)} radius={0.012} />
-      <FlowTube points={GLYCOL.pack} color="#8ecfff" speed={0.4 * sign} gain={loopGain(route.pack)} radius={0.011} />
-      <FlowTube points={GLYCOL.powertrain} color="#b7e3ff" speed={0.42 * sign} gain={loopGain(route.powertrain)} radius={0.01} />
-      <FlowTube points={GLYCOL.cabin} color="#f0d7b2" speed={0.36 * sign} gain={loopGain(route.cabin)} radius={0.01} />
-      <FlowTube points={GLYCOL.computer} color="#d5c8ff" speed={0.3} gain={computerGain} radius={0.008} />
+      <FlowTube points={GLYCOL.radiator} color="#b7e7ff" speed={0.55 * sign} gain={loopGain(route.radiator)} radius={0.028} />
+      <FlowTube points={GLYCOL.pack} color="#9fd4ff" speed={0.4 * sign} gain={loopGain(route.pack)} radius={0.026} />
+      <FlowTube points={GLYCOL.powertrain} color="#d2f0ff" speed={0.42 * sign} gain={loopGain(route.powertrain)} radius={0.022} />
+      <FlowTube points={GLYCOL.cabin} color="#f3ddc0" speed={0.36 * sign} gain={loopGain(route.cabin)} radius={0.02} />
+      <FlowTube points={GLYCOL.computer} color="#d5c8ff" speed={0.3} gain={computerGain} radius={0.012} />
     </group>
   );
 }

@@ -7,7 +7,6 @@ import type { Mode } from "../model";
 import { emphasis } from "../model";
 import { damp } from "./damp";
 import { FRONT_X, REAR_X } from "./layout";
-import { Tag } from "./tags";
 
 type Spin = MutableRefObject<{ rotor: number }>;
 
@@ -71,11 +70,10 @@ export function Motor({
     const heat = mode === "motor" ? motor : 0.2;
     if (rotor.current) rotor.current.rotation.z = spin.current.rotor;
     if (housing.current) {
-      const shellOpacity = mode === "motor" ? 0.07 : mode === "inside" ? 0.2 : mode === "overview" ? 0.95 : 0.12;
+      const shellOpacity = mode === "motor" ? 1 : mode === "inside" ? 0.72 : mode === "overview" ? 1 : 0.35;
       housing.current.opacity = shellOpacity;
-      housing.current.transmission = 0;
-      housing.current.transparent = mode !== "overview";
-      housing.current.depthWrite = mode === "overview";
+      housing.current.transparent = shellOpacity < 0.95;
+      housing.current.depthWrite = shellOpacity > 0.6;
     }
     copperMat.emissiveIntensity = 0.35 + heat * glow.current * 4.5;
     if (oil.current) oil.current.emissiveIntensity = 0.05 + heat * glow.current * 2.2;
@@ -90,32 +88,43 @@ export function Motor({
   return (
     <group>
       <group position={[REAR_X, 0.4, 0]} onClick={pick}>
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.25, 0.25, 0.62, 36]} />
+        <mesh rotation={[Math.PI / 2, 0, -0.675 * Math.PI]}>
+          <cylinderGeometry args={[0.27, 0.27, 0.58, 64, 1, false, 0, Math.PI * 1.35]} />
           <meshPhysicalMaterial
             ref={housing}
-            color="#9aa3ad"
-            metalness={0.75}
-            roughness={0.28}
+            color="#c5ced6"
+            metalness={0.82}
+            roughness={0.22}
+            clearcoat={0.6}
+            clearcoatRoughness={0.12}
             transparent
             opacity={0.92}
-            transmission={0.001}
-            thickness={0.4}
+            side={THREE.DoubleSide}
           />
         </mesh>
-        <mesh position={[0.28, 0.02, 0]}>
-          <boxGeometry args={[0.16, 0.22, 0.3]} />
-          <meshStandardMaterial color="#8e98a3" metalness={0.7} roughness={0.32} />
+        <mesh position={[0.34, 0.02, 0]}>
+          <boxGeometry args={[0.14, 0.2, 0.28]} />
+          <meshStandardMaterial color="#8e98a3" metalness={0.75} roughness={0.28} />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.19, 0.19, 0.34, 28, 1, true]} />
-          <meshStandardMaterial color="#3a4048" metalness={0.55} roughness={0.45} side={THREE.DoubleSide} />
+          <cylinderGeometry args={[0.2, 0.2, 0.32, 32, 1, true]} />
+          <meshStandardMaterial color="#2e343c" metalness={0.6} roughness={0.4} side={THREE.DoubleSide} />
         </mesh>
-        {[-0.16, 0.16].map((z) => (
-          <mesh key={z} position={[0, 0, z]} rotation={[Math.PI / 2, 0, 0]} material={copperMat}>
-            <torusGeometry args={[0.155, 0.02, 10, 28]} />
-          </mesh>
-        ))}
+        {Array.from({ length: 18 }, (_, index) => {
+          const angle = (index / 18) * Math.PI * 2;
+          return (
+            <group key={angle} rotation={[0, 0, angle]}>
+              <mesh position={[0.155, 0, 0]} material={copperMat}>
+                <boxGeometry args={[0.012, 0.03, 0.34]} />
+              </mesh>
+              {[-1, 1].map((end) => (
+                <mesh key={end} position={[0.155, 0, end * 0.19]} rotation={[0, 0, Math.PI / 2]} material={copperMat}>
+                  <torusGeometry args={[0.016, 0.007, 6, 10, Math.PI]} />
+                </mesh>
+              ))}
+            </group>
+          );
+        })}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.132, 0.008, 8, 28]} />
           <meshStandardMaterial
@@ -158,17 +167,6 @@ export function Motor({
           distance={2.4}
           color="#ffd2a8"
         />
-        {mode === "motor" || mode === "inside" ? (
-          <Tag position={[0, 0.42, 0]} active={mode === "motor"} onClick={onSelect}>
-            Rear motor
-          </Tag>
-        ) : null}
-        {mode === "motor" ? (
-          <>
-            <Tag position={[0.34, 0.22, 0]}>Inverter</Tag>
-            <Tag position={[0.36, -0.16, 0.2]}>Oil ↔ glycol</Tag>
-          </>
-        ) : null}
       </group>
 
       {(mode === "motor" || mode === "inside" || mode === "computers") && (
@@ -177,7 +175,6 @@ export function Motor({
             <cylinderGeometry args={[0.2, 0.2, 0.48, 28]} />
             <meshStandardMaterial color="#8b949e" metalness={0.7} roughness={0.34} transparent opacity={mode === "motor" ? 0.85 : 0.35} />
           </mesh>
-          {mode === "motor" ? <Tag position={[0, 0.36, 0]}>Front · induction</Tag> : null}
         </group>
       )}
     </group>

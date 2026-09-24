@@ -7,7 +7,6 @@ import { emphasis } from "../model";
 import { damp } from "./damp";
 import { FlowTube } from "./flow";
 import { COMPUTER, FRONT_X, PENTHOUSE, REAR_X } from "./layout";
-import { Tag } from "./tags";
 
 const CAMERAS: { name: string; at: [number, number, number] }[] = [
   { name: "Windshield cameras", at: [0.95, 1.18, 0] },
@@ -67,12 +66,6 @@ export function Computers({ mode, assist, onSelect }: { mode: Mode; assist: numb
           <boxGeometry args={[0.16, 0.06, 0.2]} />
           <meshStandardMaterial ref={core} color="#6d5cff" emissive="#b7a6ff" emissiveIntensity={0.4} toneMapped={false} />
         </mesh>
-        {(focused || mode === "inside") && (
-          <Tag position={[0, 0.22, 0]} active={focused} onClick={onSelect}>
-            Car computer
-          </Tag>
-        )}
-        {focused ? <Tag position={[0.18, 0.08, -0.2]}>Liquid cooled</Tag> : null}
       </group>
 
       {focused || mode === "inside"
@@ -83,14 +76,6 @@ export function Computers({ mode, assist, onSelect }: { mode: Mode; assist: numb
             </mesh>
           ))
         : null}
-      {focused
-        ? CAMERAS.filter((camera) => camera.name !== "Repeater" || camera.at[2] > 0).map((camera) => (
-            <Tag key={camera.name + camera.at[2]} position={[camera.at[0], camera.at[1] + 0.12, camera.at[2]]}>
-              {camera.name}
-            </Tag>
-          ))
-        : null}
-
       {focused || mode === "inside"
         ? CAMERA_LINKS.map((link) => (
             <FlowTube
@@ -108,12 +93,6 @@ export function Computers({ mode, assist, onSelect }: { mode: Mode; assist: numb
         <>
           <FlowTube points={REAR_DC} color="#f3f6ff" radius={0.007} speed={0.2} gain={focused ? 0.75 : 0.3} />
           <FlowTube points={FRONT_DC} color="#f3f6ff" radius={0.006} speed={0.18} gain={focused ? 0.6 : 0.22} />
-        </>
-      ) : null}
-      {focused ? (
-        <>
-          <Tag position={[REAR_X + 0.28, 0.62, 0]}>Rear inverter</Tag>
-          <Tag position={[FRONT_X + 0.1, 0.62, 0]}>Front inverter</Tag>
         </>
       ) : null}
     </group>

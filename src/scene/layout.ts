@@ -8,13 +8,13 @@ export const REAR_X = FRONT_X - 2.875;
 export const HALF_TRACK = 0.79;
 
 export const POSE: Record<Mode, { pos: [number, number, number]; target: [number, number, number] }> = {
-  overview: { pos: [3.35, 1.48, 3.55], target: [0.15, 0.62, 0] },
-  inside: { pos: [2.7, 1.85, 3.15], target: [0.05, 0.5, 0] },
-  motor: { pos: [-2.55, 0.95, 1.85], target: [REAR_X, 0.4, 0] },
-  battery: { pos: [0.35, 2.35, 2.05], target: [-0.15, 0.22, 0] },
-  penthouse: { pos: [-3.15, 1.25, 1.7], target: [-1.85, 0.42, 0.15] },
-  cooling: { pos: [0.55, 1.35, 3.85], target: [0.35, 0.48, 0] },
-  computers: { pos: [2.15, 1.45, -2.55], target: [0.55, 0.78, -0.25] },
+  overview: { pos: [2.55, 0.98, 3.7], target: [-0.35, 0.62, 0] },
+  inside: { pos: [2.4, 1.35, 3.15], target: [-0.2, 0.55, 0] },
+  motor: { pos: [-0.55, 0.95, 0.72], target: [REAR_X, 0.38, 0] },
+  battery: { pos: [1.15, 1.15, 1.05], target: [0.55, 0.32, 0] },
+  penthouse: { pos: [-2.85, 1.05, 1.45], target: [-1.85, 0.4, 0.1] },
+  cooling: { pos: [2.05, 0.78, 0.95], target: [1.62, 0.48, 0.04] },
+  computers: { pos: [1.85, 1.25, -1.85], target: [0.55, 0.82, -0.2] },
 };
 
 export type Vec3 = [number, number, number];
