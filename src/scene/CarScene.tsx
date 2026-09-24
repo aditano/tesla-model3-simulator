@@ -118,8 +118,8 @@ function SceneContents({
       <Callouts mode={control.mode} onSelect={onSelect} />
       <CameraRig mode={control.mode} resetToken={resetToken} />
       <EffectComposer multisampling={0} enableNormalPass={false}>
-        <Bloom luminanceThreshold={0.92} mipmapBlur intensity={0.42} radius={0.4} />
-        <Vignette eskil={false} offset={0.22} darkness={0.42} />
+        <Bloom luminanceThreshold={1} mipmapBlur intensity={0.18} radius={0.35} />
+        <Vignette eskil={false} offset={0.28} darkness={0.55} />
       </EffectComposer>
     </>
   );
@@ -142,7 +142,7 @@ export function CarScene({
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.05;
+        gl.toneMappingExposure = 0.84;
       }}
     >
       <Suspense fallback={null}>

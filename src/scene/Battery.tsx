@@ -105,14 +105,14 @@ export function Battery({
       {MODULES.map((module) =>
         module.cutaway ? null : (
           <RoundedBox key={module.x} args={[module.length, 0.1, 1.2]} radius={0.02} smoothness={3} position={[module.x, 0.28, 0]}>
-            <meshStandardMaterial color="#b7bec6" metalness={0.78} roughness={0.3} />
+            <meshStandardMaterial color="#d5dbe3" metalness={0.35} roughness={0.42} />
           </RoundedBox>
         ),
       )}
       <group position={[0.72, 0.3, 0]}>
         <instancedMesh ref={cells} args={[undefined, undefined, COUNT]}>
           <cylinderGeometry args={[0.011, 0.011, 0.085, 12]} />
-          <meshStandardMaterial color="#d7fff1" emissive="#7dffe4" emissiveIntensity={0.65} roughness={0.4} metalness={0.15} toneMapped={false} />
+          <meshStandardMaterial color="#c9ddd4" emissive="#7dffe4" emissiveIntensity={0.22} roughness={0.45} metalness={0.12} />
         </instancedMesh>
         {Array.from({ length: ROWS - 1 }, (_, row) => (
           <mesh key={row} position={[0, 0, (row - (ROWS - 2) / 2) * PITCH_Z]}>

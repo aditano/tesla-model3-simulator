@@ -28,12 +28,12 @@ const BODY_KEYS: Key[] = [
 ];
 
 const GLASS_KEYS: Key[] = [
-  { x: 0.98, w: 0.7, y0: 0.88, y1: 0.98, n: 2, tumble: 0.08 },
-  { x: 0.62, w: 0.68, y0: 0.98, y1: 1.28, n: 2, tumble: 0.16 },
-  { x: 0.12, w: 0.64, y0: 1.08, y1: 1.45, n: 2, tumble: 0.2 },
-  { x: -0.42, w: 0.62, y0: 1.06, y1: 1.44, n: 2, tumble: 0.2 },
-  { x: -0.92, w: 0.56, y0: 0.96, y1: 1.22, n: 2, tumble: 0.16 },
-  { x: -1.38, w: 0.4, y0: 0.84, y1: 0.96, n: 2, tumble: 0.1 },
+  { x: 0.88, w: 0.58, y0: 0.9, y1: 1.02, n: 2, tumble: 0.1 },
+  { x: 0.52, w: 0.56, y0: 1.02, y1: 1.3, n: 2, tumble: 0.18 },
+  { x: 0.02, w: 0.52, y0: 1.1, y1: 1.38, n: 2, tumble: 0.22 },
+  { x: -0.48, w: 0.5, y0: 1.08, y1: 1.36, n: 2, tumble: 0.2 },
+  { x: -0.92, w: 0.44, y0: 0.98, y1: 1.16, n: 2, tumble: 0.16 },
+  { x: -1.28, w: 0.3, y0: 0.88, y1: 0.98, n: 2, tumble: 0.1 },
 ];
 
 function sampleKeys(keys: readonly Key[], count: number): Key[] {
@@ -104,30 +104,38 @@ function applyArch(x: number, y: number, z: number, top: number): { y: number; z
     const dx = Math.abs(x - axle);
     if (dx >= archR) continue;
     const yArch = WHEEL_R + Math.sqrt(archR * archR - dx * dx);
-    if (y < yArch) lifted = Math.max(lifted, THREE.MathUtils.lerp(y, yArch, outer));
-    lip = Math.max(lip, 1 - Math.min(1, Math.abs(Math.max(y, yArch) - yArch) / 0.045));
+    if (y < yArch) {
+      const along = 1 - dx / archR;
+      lifted = Math.max(lifted, THREE.MathUtils.lerp(y, yArch, outer * along));
+    }
+    lip = Math.max(lip, 1 - Math.min(1, Math.abs(Math.max(y, yArch) - yArch) / 0.06));
   }
-  const flare = 1 + lip * outer * 0.02;
+  const flare = 1 + lip * outer * 0.008;
   return { y: lifted, z: z * flare };
 }
 
 function bodyHalf(st: Key): Pt[] {
-  const shoulderY = THREE.MathUtils.lerp(st.y0, st.y1, 0.56);
+  const shoulderY = THREE.MathUtils.lerp(st.y0, st.y1, 0.58);
   const beltZ = st.w * (1 - st.tumble);
-  const crown = 0.022 * THREE.MathUtils.smoothstep(st.w, 0.25, 0.75);
+  const crown = 0.018 * THREE.MathUtils.smoothstep(st.w, 0.25, 0.75);
+  const top = st.y1 + crown;
   return filletOpen(
     [
-      { z: 0, y: st.y1 + crown },
-      { z: beltZ * 0.58, y: st.y1 + crown * 0.15 },
+      { z: 0, y: top },
+      { z: beltZ * 0.42, y: top - crown * 0.2 },
+      { z: beltZ * 0.78, y: st.y1 + crown * 0.05 },
       { z: beltZ, y: st.y1 },
-      { z: st.w, y: shoulderY, sharp: true },
-      { z: st.w * 0.985, y: THREE.MathUtils.lerp(st.y0, shoulderY, 0.22) },
-      { z: st.w * 0.7, y: st.y0 + 0.02 },
-      { z: st.w * 0.28, y: st.y0 - 0.012 },
+      { z: THREE.MathUtils.lerp(beltZ, st.w, 0.55), y: shoulderY + (st.y1 - shoulderY) * 0.45 },
+      { z: st.w, y: shoulderY },
+      { z: st.w * 0.992, y: shoulderY - 0.06 },
+      { z: st.w * 0.97, y: THREE.MathUtils.lerp(st.y0, shoulderY, 0.42) },
+      { z: st.w * 0.9, y: THREE.MathUtils.lerp(st.y0, shoulderY, 0.16) },
+      { z: st.w * 0.72, y: st.y0 + 0.03 },
+      { z: st.w * 0.32, y: st.y0 - 0.008 },
       { z: 0, y: st.y0 },
     ],
-    0.05,
-    3,
+    0.085,
+    5,
   );
 }
 
@@ -140,8 +148,8 @@ function glassHalf(st: Key): Pt[] {
       { z: st.w, y: THREE.MathUtils.lerp(st.y0, st.y1, 0.2) },
       { z: 0, y: st.y0 },
     ],
-    0.07,
-    4,
+    0.09,
+    6,
   );
 }
 
@@ -160,7 +168,7 @@ function ringAt(st: Key, kind: "body" | "glass"): THREE.Vector3[] {
 }
 
 function loft(keys: readonly Key[], kind: "body" | "glass"): THREE.BufferGeometry {
-  const samples = sampleKeys(keys, kind === "body" ? 88 : 48);
+  const samples = sampleKeys(keys, kind === "body" ? 128 : 72);
   const first = ringAt(samples[0], kind);
   const rings = first.length;
   const positions: number[] = [];

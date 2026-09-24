@@ -52,8 +52,8 @@ export function FlowTube({
   useFrame((_, dt) => {
     map.offset.x = (map.offset.x - dt * speed) % 1;
     if (material.current) {
-      material.current.opacity = Math.max(0, Math.min(1, gain));
-      material.current.emissiveIntensity = 0.8 + gain * 3.2;
+      material.current.opacity = Math.max(0, Math.min(0.85, gain));
+      material.current.emissiveIntensity = 0.2 + gain * 0.9;
     }
   });
 
@@ -66,13 +66,12 @@ export function FlowTube({
         map={map}
         emissive={color}
         emissiveMap={map}
-        emissiveIntensity={1.4}
-        roughness={0.35}
+        emissiveIntensity={0.6}
+        roughness={0.4}
         metalness={0.05}
         transparent
-        opacity={gain}
+        opacity={Math.min(0.85, gain)}
         depthWrite={false}
-        toneMapped={false}
       />
     </mesh>
   );

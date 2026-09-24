@@ -67,15 +67,15 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
   const paint = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
-        color: "#f4f1ea",
-        metalness: 0.06,
-        roughness: 0.12,
-        clearcoat: 1,
-        clearcoatRoughness: 0.025,
-        envMapIntensity: 1.7,
-        sheen: 0.35,
-        sheenColor: new THREE.Color("#fffaf4"),
-        sheenRoughness: 0.35,
+        color: "#efece6",
+        metalness: 0.02,
+        roughness: 0.32,
+        clearcoat: 0.8,
+        clearcoatRoughness: 0.18,
+        envMapIntensity: 0.42,
+        sheen: 0.12,
+        sheenColor: new THREE.Color("#f7f1e8"),
+        sheenRoughness: 0.55,
       }),
     [],
   );
@@ -101,17 +101,17 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
   const glassMat = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
-        color: "#0c1218",
-        roughness: 0.02,
+        color: "#24303c",
+        roughness: 0.08,
         metalness: 0,
         transmission: 1,
-        thickness: 0.2,
+        thickness: 0.08,
         ior: 1.5,
         transparent: true,
         opacity: 1,
-        envMapIntensity: 1.4,
-        attenuationColor: new THREE.Color("#0a1016"),
-        attenuationDistance: 0.45,
+        envMapIntensity: 0.7,
+        attenuationColor: new THREE.Color("#1c2834"),
+        attenuationDistance: 2.2,
       }),
     [],
   );
@@ -141,15 +141,16 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
     paint.opacity = 1 - amount;
     paint.transparent = amount > 0.02;
     paint.depthWrite = amount < 0.35;
-    clear.opacity = Math.min(1, amount * 1.15);
+    clear.opacity = Math.min(0.2, amount * 0.24);
     clear.depthWrite = false;
-    clear.thickness = 0.03;
-    clear.roughness = 0.02;
-    glassMat.roughness = amount > 0.5 ? 0.02 : 0.04;
-    glassMat.thickness = amount > 0.5 ? 0.03 : 0.2;
-    glassMat.color.set(amount > 0.5 ? "#d5e0ea" : "#0c1218");
-    glassMat.attenuationColor.set(amount > 0.5 ? "#ffffff" : "#0a1016");
-    glassMat.attenuationDistance = THREE.MathUtils.lerp(0.45, 12, amount);
+    clear.thickness = 0.02;
+    clear.roughness = 0.03;
+    glassMat.roughness = 0.06;
+    glassMat.thickness = THREE.MathUtils.lerp(0.08, 0.02, amount);
+    glassMat.color.set(amount > 0.55 ? "#d7e4ee" : "#24303c");
+    glassMat.attenuationColor.set(amount > 0.55 ? "#f4f7fb" : "#1c2834");
+    glassMat.attenuationDistance = THREE.MathUtils.lerp(2.2, 9, amount);
+    glassMat.envMapIntensity = THREE.MathUtils.lerp(0.7, 1, amount);
     glassMat.depthWrite = amount < 0.5;
     glassMat.opacity = 1;
     const cabin = Math.max(0, Math.min(1, (amount - 0.2) / 0.8));
@@ -201,13 +202,13 @@ function Lamps() {
           </mesh>
           <mesh position={[0.03, 0, 0]} raycast={() => undefined}>
             <boxGeometry args={[0.04, 0.028, 0.32]} />
-            <meshStandardMaterial color="#f7fbff" emissive="#f4f8ff" emissiveIntensity={4} toneMapped={false} />
+            <meshStandardMaterial color="#dfe7f2" emissive="#f4f8ff" emissiveIntensity={0.7} />
           </mesh>
         </group>
       ))}
       <mesh position={[-2.2, 0.58, 0]} raycast={() => undefined}>
         <boxGeometry args={[0.035, 0.028, 1.05]} />
-        <meshStandardMaterial color="#2a0c10" emissive="#ff3340" emissiveIntensity={2.2} toneMapped={false} />
+        <meshStandardMaterial color="#3a1418" emissive="#ff3340" emissiveIntensity={0.45} />
       </mesh>
       <mesh position={[2.18, 0.24, 0]} raycast={() => undefined}>
         <boxGeometry args={[0.08, 0.08, 1.2]} />

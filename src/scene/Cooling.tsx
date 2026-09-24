@@ -83,18 +83,18 @@ export function Cooling({ mode, valve, assist, onSelect }: { mode: Mode; valve: 
         <group ref={stem}>
           <mesh>
             <cylinderGeometry args={[0.05, 0.05, 0.2, 24]} />
-            <meshStandardMaterial color="#8fd4ff" emissive="#b7e6ff" emissiveIntensity={2.4} toneMapped={false} metalness={0.35} roughness={0.2} />
+            <meshStandardMaterial color="#d5e9f6" emissive="#9fd4ff" emissiveIntensity={0.55} metalness={0.25} roughness={0.28} />
           </mesh>
           <mesh position={[0.09, 0.09, 0]}>
             <boxGeometry args={[0.045, 0.012, 0.012]} />
-            <meshStandardMaterial color="#f4fbff" emissive="#e7f6ff" emissiveIntensity={3} toneMapped={false} />
+            <meshStandardMaterial color="#e7f3fb" emissive="#d5ecff" emissiveIntensity={0.4} />
           </mesh>
           {[0, 1, 2, 3].map((port) => {
             const angle = (port / 4) * Math.PI * 2;
             return (
               <mesh key={port} position={[Math.cos(angle) * 0.11, 0, Math.sin(angle) * 0.11]} rotation={[0, -angle, Math.PI / 2]}>
                 <cylinderGeometry args={[0.022, 0.018, 0.15, 14]} />
-                <meshStandardMaterial color="#d5e9f8" emissive="#9fd4ff" emissiveIntensity={mode === "cooling" ? 1.6 : 0.25} metalness={0.55} roughness={0.22} toneMapped={false} />
+                <meshStandardMaterial color="#d5e9f8" emissive="#9fd4ff" emissiveIntensity={mode === "cooling" ? 0.45 : 0.12} metalness={0.45} roughness={0.28} />
               </mesh>
             );
           })}

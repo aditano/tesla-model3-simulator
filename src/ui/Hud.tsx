@@ -99,8 +99,8 @@ export function Hud({
             i
           </button>
         </div>
-        <div className="seg-label">Body</div>
-        <div className="segmented row" role="radiogroup" aria-label="Body">
+        <div className="seg-label pick">Body</div>
+        <div className="segmented row pick" role="radiogroup" aria-label="Body">
           <button type="button" role="radio" aria-checked={mode === "overview"} className={mode === "overview" ? "on" : ""} onClick={() => onMode("overview")}>
             Assembled
           </button>
@@ -108,8 +108,8 @@ export function Hud({
             Open
           </button>
         </div>
-        <div className="seg-label">System</div>
-        <div className="segmented systems" role="radiogroup" aria-label="System">
+        <div className="seg-label pick">System</div>
+        <div className="segmented systems pick" role="radiogroup" aria-label="System">
           {NAV.filter((item) => item.id !== "overview" && item.id !== "inside").map((item) => (
             <button
               key={item.id}

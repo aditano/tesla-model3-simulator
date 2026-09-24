@@ -92,7 +92,7 @@ export function Motor({
           <cylinderGeometry args={[0.27, 0.27, 0.58, 64, 1, false, 0, Math.PI * 1.35]} />
           <meshPhysicalMaterial
             ref={housing}
-            color="#1c2128"
+            color="#3c4550"
             metalness={0.72}
             roughness={0.28}
             clearcoat={0.85}
