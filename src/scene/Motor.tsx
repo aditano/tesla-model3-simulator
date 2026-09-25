@@ -46,9 +46,9 @@ export function Motor({
         color: "#b87348",
         emissive: new THREE.Color("#e39a55"),
         emissiveIntensity: 0.2,
-        metalness: 0.65,
-        roughness: 0.28,
-        toneMapped: false,
+        metalness: 0.72,
+        roughness: 0.32,
+        toneMapped: true,
       }),
     [],
   );
@@ -75,8 +75,8 @@ export function Motor({
       housing.current.transparent = shellOpacity < 0.95;
       housing.current.depthWrite = shellOpacity > 0.6;
     }
-    copperMat.emissiveIntensity = 0.35 + heat * glow.current * 4.5;
-    if (oil.current) oil.current.emissiveIntensity = 0.05 + heat * glow.current * 2.2;
+    copperMat.emissiveIntensity = 0.12 + heat * glow.current * 0.55;
+    if (oil.current) oil.current.emissiveIntensity = 0.04 + heat * glow.current * 0.35;
     fieldMat.opacity = glow.current * (0.18 + heat * 0.82);
   });
 
@@ -93,10 +93,11 @@ export function Motor({
           <meshPhysicalMaterial
             ref={housing}
             color="#3c4550"
-            metalness={0.72}
-            roughness={0.28}
-            clearcoat={0.85}
-            clearcoatRoughness={0.08}
+            metalness={0.84}
+            roughness={0.22}
+            clearcoat={1}
+            clearcoatRoughness={0.06}
+            envMapIntensity={1.25}
             transparent
             opacity={0.92}
             side={THREE.DoubleSide}
@@ -135,8 +136,8 @@ export function Motor({
             ref={oil}
             color="#e7b15a"
             emissive="#ffbf70"
-            emissiveIntensity={0.2}
-            toneMapped={false}
+            emissiveIntensity={0.15}
+            toneMapped={true}
             transparent
             opacity={0.9}
           />
@@ -167,7 +168,7 @@ export function Motor({
         </group>
         <pointLight
           position={[0, 0.35, 0.45]}
-          intensity={mode === "motor" ? 8 : mode === "inside" ? 2 : 0}
+          intensity={mode === "motor" ? 0.85 : mode === "inside" ? 0.25 : 0}
           distance={2.4}
           color="#ffd2a8"
         />

@@ -92,12 +92,12 @@ button, input { font: inherit; color: inherit; }
 
 .chips p {
   margin: 0;
-  min-width: 84px;
-  padding: 8px 12px 9px;
-  border-radius: 12px;
-  background: rgba(16, 20, 28, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
+  min-width: 72px;
+  padding: 6px 10px 7px;
+  border-radius: 10px;
+  background: rgba(8, 10, 14, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(18px);
 }
 
 .chips span {
@@ -120,13 +120,13 @@ button, input { font: inherit; color: inherit; }
   z-index: 3;
   top: max(22px, env(safe-area-inset-top));
   right: max(22px, env(safe-area-inset-right));
-  width: min(248px, calc(100vw - 40px));
+  width: min(236px, calc(100vw - 40px));
   padding: 10px 12px 8px;
-  border-radius: 16px;
-  background: rgba(10, 12, 18, 0.46);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(8, 10, 14, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: none;
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px);
 }
 
 .glass-head, .glass-foot {

@@ -67,32 +67,32 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
   const paint = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
-        color: "#efece6",
-        metalness: 0.02,
-        roughness: 0.32,
-        clearcoat: 0.8,
-        clearcoatRoughness: 0.18,
-        envMapIntensity: 0.42,
-        sheen: 0.12,
-        sheenColor: new THREE.Color("#f7f1e8"),
-        sheenRoughness: 0.55,
+        color: "#f3f0ea",
+        metalness: 0.06,
+        roughness: 0.2,
+        clearcoat: 1,
+        clearcoatRoughness: 0.045,
+        envMapIntensity: 1.05,
+        sheen: 0.06,
+        sheenColor: new THREE.Color("#fff6ee"),
+        sheenRoughness: 0.35,
       }),
     [],
   );
   const clear = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
-        color: "#e7eef6",
+        color: "#e8eef6",
         metalness: 0,
-        roughness: 0.04,
+        roughness: 0.015,
         transmission: 1,
-        thickness: 0.03,
-        ior: 1.12,
+        thickness: 0.16,
+        ior: 1.45,
         transparent: true,
         opacity: 0,
-        envMapIntensity: 1.5,
-        attenuationColor: new THREE.Color("#ffffff"),
-        attenuationDistance: 12,
+        envMapIntensity: 1.8,
+        attenuationColor: new THREE.Color("#d5e4f2"),
+        attenuationDistance: 1.8,
         side: THREE.FrontSide,
         depthWrite: false,
       }),
@@ -101,22 +101,22 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
   const glassMat = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
-        color: "#24303c",
-        roughness: 0.08,
+        color: "#101820",
+        roughness: 0.02,
         metalness: 0,
         transmission: 1,
-        thickness: 0.08,
+        thickness: 0.22,
         ior: 1.5,
         transparent: true,
         opacity: 1,
-        envMapIntensity: 0.7,
-        attenuationColor: new THREE.Color("#1c2834"),
-        attenuationDistance: 2.2,
+        envMapIntensity: 1.7,
+        attenuationColor: new THREE.Color("#0c141c"),
+        attenuationDistance: 0.55,
       }),
     [],
   );
   const clothMat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: "#23262c", roughness: 0.9, transparent: true, opacity: 0 }),
+    () => new THREE.MeshStandardMaterial({ color: "#3a4048", roughness: 0.86, transparent: true, opacity: 0 }),
     [],
   );
   const wheelMat = useMemo(
@@ -141,16 +141,16 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
     paint.opacity = 1 - amount;
     paint.transparent = amount > 0.02;
     paint.depthWrite = amount < 0.35;
-    clear.opacity = Math.min(0.2, amount * 0.24);
+    clear.opacity = Math.min(0.62, amount * 0.68);
     clear.depthWrite = false;
-    clear.thickness = 0.02;
-    clear.roughness = 0.03;
-    glassMat.roughness = 0.06;
-    glassMat.thickness = THREE.MathUtils.lerp(0.08, 0.02, amount);
-    glassMat.color.set(amount > 0.55 ? "#d7e4ee" : "#24303c");
-    glassMat.attenuationColor.set(amount > 0.55 ? "#f4f7fb" : "#1c2834");
-    glassMat.attenuationDistance = THREE.MathUtils.lerp(2.2, 9, amount);
-    glassMat.envMapIntensity = THREE.MathUtils.lerp(0.7, 1, amount);
+    clear.thickness = 0.16;
+    clear.roughness = 0.015;
+    glassMat.roughness = THREE.MathUtils.lerp(0.02, 0.04, amount);
+    glassMat.thickness = THREE.MathUtils.lerp(0.22, 0.05, amount);
+    glassMat.color.set(amount > 0.55 ? "#d5e3ef" : "#101820");
+    glassMat.attenuationColor.set(amount > 0.55 ? "#eef4f8" : "#0c141c");
+    glassMat.attenuationDistance = THREE.MathUtils.lerp(0.55, 6, amount);
+    glassMat.envMapIntensity = THREE.MathUtils.lerp(1.7, 1.35, amount);
     glassMat.depthWrite = amount < 0.5;
     glassMat.opacity = 1;
     const cabin = Math.max(0, Math.min(1, (amount - 0.2) / 0.8));
@@ -184,6 +184,7 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
       />
       <mesh ref={clearShell} geometry={body} material={clear} scale={1.004} visible={false} raycast={() => undefined} />
       <mesh geometry={glassGeo} material={glassMat} raycast={() => undefined} />
+      <pointLight position={[0.15, 0.95, 0]} intensity={1.8} distance={3.4} color="#f4f7ff" />
       <Lamps />
       <Mirrors />
       <Interior cloth={clothMat} wheel={wheelMat} screen={screenMat} onComputer={onComputer} group={interior} />

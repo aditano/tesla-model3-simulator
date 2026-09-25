@@ -1,7 +1,8 @@
 import { Suspense, useEffect, useRef, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { Bloom, DepthOfField, EffectComposer, Vignette } from "@react-three/postprocessing";
+import type { DepthOfFieldEffect } from "postprocessing";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { Mode, SceneControl } from "../model";
@@ -93,6 +94,24 @@ function CameraRig({ mode, resetToken }: { mode: Mode; resetToken: number }) {
   );
 }
 
+function StudioFocus() {
+  const effect = useRef<DepthOfFieldEffect>(null);
+  const camera = useThree((state) => state.camera);
+  const controls = useThree((state) => state.controls) as OrbitControlsImpl | null;
+  const aim = useRef(new THREE.Vector3());
+
+  useFrame(() => {
+    const dof = effect.current;
+    if (!dof || !controls) return;
+    aim.current.copy(controls.target);
+    dof.target = aim.current;
+    const dist = camera.position.distanceTo(aim.current);
+    dof.cocMaterial.focusRange = Math.max(1.45, dist * 0.4);
+  });
+
+  return <DepthOfField ref={effect} bokehScale={1.7} resolutionScale={0.55} focusDistance={4} focusRange={1.8} />;
+}
+
 function SceneContents({
   control,
   resetToken,
@@ -118,8 +137,9 @@ function SceneContents({
       <Callouts mode={control.mode} onSelect={onSelect} />
       <CameraRig mode={control.mode} resetToken={resetToken} />
       <EffectComposer multisampling={0} enableNormalPass={false}>
-        <Bloom luminanceThreshold={1} mipmapBlur intensity={0.18} radius={0.35} />
-        <Vignette eskil={false} offset={0.28} darkness={0.55} />
+        <StudioFocus />
+        <Bloom luminanceThreshold={1.05} mipmapBlur intensity={0.12} radius={0.3} />
+        <Vignette eskil={false} offset={0.32} darkness={0.62} />
       </EffectComposer>
     </>
   );
@@ -137,12 +157,12 @@ export function CarScene({
   const pose = POSE.overview;
   return (
     <Canvas
-      camera={{ position: pose.pos, fov: 32, near: 0.05, far: 50 }}
+      camera={{ position: pose.pos, fov: 28, near: 0.05, far: 50 }}
       dpr={[1, 1.6]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 0.84;
+        gl.toneMappingExposure = 0.9;
       }}
     >
       <Suspense fallback={null}>
