@@ -159,6 +159,14 @@ export const sources = [
     supports:
       "The structural pack that reached production (Austin Model Y in this report) uses glued 4680 cells and no modules. That is a different object from the Model 3 2170 pack drawn here.",
   },
+  {
+    id: "dimensions",
+    short: "Model 3 dimensions",
+    title: "Tesla Model 3 — published overall dimensions",
+    url: "https://en.wikipedia.org/wiki/Tesla_Model_3",
+    supports:
+      "Overall envelope used for the schematic body: wheelbase 2,875 mm, length about 4,694 mm, width about 1,849 mm, height about 1,443 mm. The surface drawn here is original. It is not factory CAD.",
+  },
 ] as const satisfies readonly Source[];
 
 export type SourceId = (typeof sources)[number]["id"];

@@ -111,7 +111,7 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
         opacity: 1,
         envMapIntensity: 1.7,
         attenuationColor: new THREE.Color("#0c141c"),
-        attenuationDistance: 0.55,
+        attenuationDistance: 0.9,
       }),
     [],
   );
@@ -149,7 +149,7 @@ export function Body({ mode, onOpen, onComputer }: { mode: Mode; onOpen: () => v
     glassMat.thickness = THREE.MathUtils.lerp(0.22, 0.05, amount);
     glassMat.color.set(amount > 0.55 ? "#d5e3ef" : "#101820");
     glassMat.attenuationColor.set(amount > 0.55 ? "#eef4f8" : "#0c141c");
-    glassMat.attenuationDistance = THREE.MathUtils.lerp(0.55, 6, amount);
+    glassMat.attenuationDistance = THREE.MathUtils.lerp(0.9, 6, amount);
     glassMat.envMapIntensity = THREE.MathUtils.lerp(1.7, 1.35, amount);
     glassMat.depthWrite = amount < 0.5;
     glassMat.opacity = 1;
@@ -196,7 +196,7 @@ function Lamps() {
   return (
     <group>
       {[0.62, -0.62].map((z) => (
-        <group key={z} position={[2.02, 0.5, z]} rotation={[0, z > 0 ? -0.5 : 0.5, 0]}>
+        <group key={z} position={[2.08, 0.62, z]} rotation={[0, z > 0 ? -0.4 : 0.4, 0]}>
           <mesh position={[-0.02, 0, 0]} raycast={() => undefined}>
             <boxGeometry args={[0.12, 0.055, 0.42]} />
             <meshStandardMaterial color="#14171c" metalness={0.45} roughness={0.32} />
@@ -207,15 +207,15 @@ function Lamps() {
           </mesh>
         </group>
       ))}
-      <mesh position={[-2.2, 0.58, 0]} raycast={() => undefined}>
+      <mesh position={[-2.28, 0.78, 0]} raycast={() => undefined}>
         <boxGeometry args={[0.035, 0.028, 1.05]} />
         <meshStandardMaterial color="#3a1418" emissive="#ff3340" emissiveIntensity={0.45} />
       </mesh>
-      <mesh position={[2.18, 0.24, 0]} raycast={() => undefined}>
+      <mesh position={[2.12, 0.28, 0]} raycast={() => undefined}>
         <boxGeometry args={[0.08, 0.08, 1.2]} />
         <meshStandardMaterial color="#101216" roughness={0.55} metalness={0.25} />
       </mesh>
-      <mesh position={[-2.16, 0.64, 0.72]} rotation={[0, 0.4, Math.PI / 2]} raycast={() => undefined}>
+      <mesh position={[-2.22, 0.82, 0.62]} rotation={[0, 0.4, Math.PI / 2]} raycast={() => undefined}>
         <cylinderGeometry args={[0.045, 0.045, 0.02, 20]} />
         <meshStandardMaterial color="#1a1d22" metalness={0.7} roughness={0.28} />
       </mesh>
@@ -227,7 +227,7 @@ function Mirrors() {
   return (
     <group>
       {[1, -1].map((side) => (
-        <group key={side} position={[0.42, 0.98, side * 1.02]}>
+        <group key={side} position={[0.62, 1.02, side * 1.0]}>
           <mesh rotation={[0, 0, Math.PI / 2]} raycast={() => undefined}>
             <capsuleGeometry args={[0.035, 0.12, 4, 8]} />
             <meshPhysicalMaterial color="#f6f3ec" metalness={0.04} roughness={0.2} clearcoat={1} clearcoatRoughness={0.05} />

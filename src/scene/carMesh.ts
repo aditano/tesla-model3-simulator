@@ -1,198 +1,222 @@
 import * as THREE from "three";
 import { FRONT_X, REAR_X, WHEEL_R } from "./layout";
 
-type Key = {
-  x: number;
-  w: number;
-  y0: number;
-  y1: number;
-  n: number;
-  tumble: number;
-};
+/**
+ * Original schematic shell. Proportions follow the published Model 3 envelope
+ * (wheelbase 2.875 m, length about 4.69 m, width about 1.85 m, height about 1.44 m).
+ * It is not a factory surface and not a scanned mesh.
+ */
 
-type Pt = { z: number; y: number; sharp?: boolean };
+const TIP = 2.28;
+const TAIL = -2.46;
+const COWL = 0.98;
+const DECK = -1.4;
+const ROCKER = 0.16;
 
-const BODY_KEYS: Key[] = [
-  { x: 2.3, w: 0.18, y0: 0.32, y1: 0.46, n: 2, tumble: 0.04 },
-  { x: 2.08, w: 0.7, y0: 0.18, y1: 0.58, n: 2, tumble: 0.05 },
-  { x: 1.78, w: 0.9, y0: 0.15, y1: 0.7, n: 2, tumble: 0.06 },
-  { x: 1.4, w: 0.95, y0: 0.14, y1: 0.78, n: 2, tumble: 0.07 },
-  { x: 1.02, w: 0.95, y0: 0.14, y1: 0.9, n: 2, tumble: 0.1 },
-  { x: 0.4, w: 0.955, y0: 0.14, y1: 0.96, n: 2, tumble: 0.12 },
-  { x: -0.45, w: 0.955, y0: 0.14, y1: 0.96, n: 2, tumble: 0.12 },
-  { x: -1.15, w: 0.94, y0: 0.15, y1: 0.9, n: 2, tumble: 0.1 },
-  { x: -1.58, w: 0.9, y0: 0.16, y1: 0.8, n: 2, tumble: 0.08 },
-  { x: -1.98, w: 0.8, y0: 0.18, y1: 0.66, n: 2, tumble: 0.05 },
-  { x: -2.28, w: 0.48, y0: 0.26, y1: 0.52, n: 2, tumble: 0.03 },
-  { x: -2.46, w: 0.16, y0: 0.34, y1: 0.44, n: 2, tumble: 0.02 },
+type Key = { x: number; v: number };
+type Pt = { y: number; z: number; glass: boolean };
+
+const CROWN: readonly Key[] = [
+  { x: TAIL, v: 0.58 },
+  { x: -2.2, v: 0.74 },
+  { x: -1.85, v: 0.92 },
+  { x: -1.48, v: 1.02 },
+  { x: -1.12, v: 1.16 },
+  { x: -0.72, v: 1.34 },
+  { x: -0.28, v: 1.43 },
+  { x: 0.12, v: 1.4 },
+  { x: 0.48, v: 1.26 },
+  { x: COWL, v: 1.02 },
+  { x: 1.28, v: 0.9 },
+  { x: 1.62, v: 0.74 },
+  { x: 1.95, v: 0.62 },
+  { x: TIP, v: 0.52 },
 ];
 
-const GLASS_KEYS: Key[] = [
-  { x: 0.88, w: 0.58, y0: 0.9, y1: 1.02, n: 2, tumble: 0.1 },
-  { x: 0.52, w: 0.56, y0: 1.02, y1: 1.3, n: 2, tumble: 0.18 },
-  { x: 0.02, w: 0.52, y0: 1.1, y1: 1.38, n: 2, tumble: 0.22 },
-  { x: -0.48, w: 0.5, y0: 1.08, y1: 1.36, n: 2, tumble: 0.2 },
-  { x: -0.92, w: 0.44, y0: 0.98, y1: 1.16, n: 2, tumble: 0.16 },
-  { x: -1.28, w: 0.3, y0: 0.88, y1: 0.98, n: 2, tumble: 0.1 },
+const HIP: readonly Key[] = [
+  { x: TAIL, v: 0.46 },
+  { x: -2.22, v: 0.7 },
+  { x: -1.82, v: 0.84 },
+  { x: -1.35, v: 0.91 },
+  { x: -0.55, v: 0.94 },
+  { x: 0.25, v: 0.935 },
+  { x: 1.05, v: 0.925 },
+  { x: 1.55, v: 0.9 },
+  { x: 1.95, v: 0.78 },
+  { x: TIP, v: 0.5 },
 ];
 
-function sampleKeys(keys: readonly Key[], count: number): Key[] {
-  const sorted = [...keys].sort((a, b) => a.x - b.x);
-  const out: Key[] = [];
-  for (let i = 0; i < count; i += 1) {
-    const x = THREE.MathUtils.lerp(sorted[0].x, sorted[sorted.length - 1].x, i / (count - 1));
-    let index = 0;
-    while (index < sorted.length - 2 && sorted[index + 1].x < x) index += 1;
-    const a = sorted[index];
-    const b = sorted[index + 1];
-    const span = b.x - a.x || 1;
-    const t = THREE.MathUtils.smoothstep((x - a.x) / span, 0, 1);
-    out.push({
-      x,
-      w: THREE.MathUtils.lerp(a.w, b.w, t),
-      y0: THREE.MathUtils.lerp(a.y0, b.y0, t),
-      y1: THREE.MathUtils.lerp(a.y1, b.y1, t),
-      n: THREE.MathUtils.lerp(a.n, b.n, t),
-      tumble: THREE.MathUtils.lerp(a.tumble, b.tumble, t),
-    });
-  }
-  return out;
+const BELT: readonly Key[] = [
+  { x: TAIL, v: 0.56 },
+  { x: -1.7, v: 0.94 },
+  { x: -1.15, v: 1.05 },
+  { x: -0.2, v: 1.0 },
+  { x: 0.55, v: 0.98 },
+  { x: COWL, v: 1.0 },
+  { x: 1.35, v: 0.88 },
+  { x: 1.75, v: 0.7 },
+  { x: TIP, v: 0.5 },
+];
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
 }
 
-function filletOpen(corners: readonly Pt[], radius: number, steps: number): Pt[] {
-  const out: Pt[] = [];
-  const push = (z: number, y: number, sharp = false) => {
-    const last = out[out.length - 1];
-    if (last && Math.hypot(last.z - z, last.y - y) < 1e-5) return;
-    out.push({ z, y, sharp });
-  };
-  push(corners[0].z, corners[0].y, corners[0].sharp);
-  for (let i = 1; i < corners.length - 1; i += 1) {
-    const prev = corners[i - 1];
-    const curr = corners[i];
-    const next = corners[i + 1];
-    if (curr.sharp) {
-      push(curr.z, curr.y, true);
-      continue;
-    }
-    const d1 = Math.hypot(prev.z - curr.z, prev.y - curr.y) || 1;
-    const d2 = Math.hypot(next.z - curr.z, next.y - curr.y) || 1;
-    const len = Math.min(radius, d1 * 0.46, d2 * 0.46);
-    const az = curr.z + ((prev.z - curr.z) / d1) * len;
-    const ay = curr.y + ((prev.y - curr.y) / d1) * len;
-    const bz = curr.z + ((next.z - curr.z) / d2) * len;
-    const by = curr.y + ((next.y - curr.y) / d2) * len;
-    for (let s = 0; s <= steps; s += 1) {
-      const t = s / steps;
-      const u = 1 - t;
-      push(u * u * az + 2 * u * t * curr.z + t * t * bz, u * u * ay + 2 * u * t * curr.y + t * t * by);
-    }
-  }
-  const last = corners[corners.length - 1];
-  push(last.z, last.y, last.sharp);
-  return out;
+function sample(keys: readonly Key[], x: number): number {
+  if (x <= keys[0].x) return keys[0].v;
+  const last = keys[keys.length - 1];
+  if (x >= last.x) return last.v;
+  let index = 0;
+  while (keys[index + 1].x < x) index += 1;
+  const a = keys[index];
+  const b = keys[index + 1];
+  const span = b.x - a.x || 1;
+  const t = (x - a.x) / span;
+  const p0 = keys[Math.max(0, index - 1)].v;
+  const p3 = keys[Math.min(keys.length - 1, index + 2)].v;
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return (
+    0.5 *
+    (2 * a.v +
+      (-p0 + b.v) * t +
+      (2 * p0 - 5 * a.v + 4 * b.v - p3) * t2 +
+      (-p0 + 3 * a.v - 3 * b.v + p3) * t3)
+  );
 }
 
-function applyArch(x: number, y: number, z: number, top: number): { y: number; z: number } {
-  if (y > top - 0.025) return { y, z };
-  const outer = THREE.MathUtils.smoothstep(Math.abs(z), 0.5, 0.82);
-  if (outer <= 0) return { y, z };
-  const archR = WHEEL_R + 0.12;
-  let lifted = y;
-  let lip = 0;
+function outerLip(x: number): number {
+  const gap = 0.06;
+  const blend = 0.16;
+  let lip = ROCKER;
   for (const axle of [FRONT_X, REAR_X]) {
     const dx = Math.abs(x - axle);
-    if (dx >= archR) continue;
-    const yArch = WHEEL_R + Math.sqrt(archR * archR - dx * dx);
-    if (y < yArch) {
-      const along = 1 - dx / archR;
-      lifted = Math.max(lifted, THREE.MathUtils.lerp(y, yArch, outer * along));
+    const limit = WHEEL_R + gap;
+    if (dx >= limit + blend) continue;
+    if (dx <= limit) {
+      lip = Math.max(lip, WHEEL_R + Math.sqrt(limit * limit - dx * dx));
+      continue;
     }
-    lip = Math.max(lip, 1 - Math.min(1, Math.abs(Math.max(y, yArch) - yArch) / 0.06));
+    const u = (dx - limit) / blend;
+    const s = u * u * (3 - 2 * u);
+    lip = Math.max(lip, lerp(WHEEL_R, ROCKER, s));
   }
-  const flare = 1 + lip * outer * 0.008;
-  return { y: lifted, z: z * flare };
+  return lip;
 }
 
-function bodyHalf(st: Key): Pt[] {
-  const shoulderY = THREE.MathUtils.lerp(st.y0, st.y1, 0.58);
-  const beltZ = st.w * (1 - st.tumble);
-  const crown = 0.018 * THREE.MathUtils.smoothstep(st.w, 0.25, 0.75);
-  const top = st.y1 + crown;
-  return filletOpen(
-    [
-      { z: 0, y: top },
-      { z: beltZ * 0.42, y: top - crown * 0.2 },
-      { z: beltZ * 0.78, y: st.y1 + crown * 0.05 },
-      { z: beltZ, y: st.y1 },
-      { z: THREE.MathUtils.lerp(beltZ, st.w, 0.55), y: shoulderY + (st.y1 - shoulderY) * 0.45 },
-      { z: st.w, y: shoulderY },
-      { z: st.w * 0.992, y: shoulderY - 0.06 },
-      { z: st.w * 0.97, y: THREE.MathUtils.lerp(st.y0, shoulderY, 0.42) },
-      { z: st.w * 0.9, y: THREE.MathUtils.lerp(st.y0, shoulderY, 0.16) },
-      { z: st.w * 0.72, y: st.y0 + 0.03 },
-      { z: st.w * 0.32, y: st.y0 - 0.008 },
-      { z: 0, y: st.y0 },
-    ],
-    0.085,
-    5,
-  );
+function endShape(x: number): { zScale: number; yMix: number; yAnchor: number } {
+  if (x > 2.0) {
+    const u = THREE.MathUtils.clamp((x - 2.0) / (TIP - 2.0), 0, 1);
+    return { zScale: Math.sqrt(Math.max(0, 1 - u * u)), yMix: u * u, yAnchor: 0.55 };
+  }
+  if (x < -2.18) {
+    const u = THREE.MathUtils.clamp((-2.18 - x) / (-2.18 - TAIL), 0, 1);
+    return { zScale: Math.sqrt(Math.max(0, 1 - u * u)), yMix: u * u, yAnchor: 0.68 };
+  }
+  return { zScale: 1, yMix: 0, yAnchor: 0 };
 }
 
-function glassHalf(st: Key): Pt[] {
-  const roofZ = st.w * (1 - st.tumble);
-  return filletOpen(
-    [
-      { z: 0, y: st.y1 },
-      { z: roofZ, y: st.y1 },
-      { z: st.w, y: THREE.MathUtils.lerp(st.y0, st.y1, 0.2) },
-      { z: 0, y: st.y0 },
-    ],
-    0.09,
-    6,
-  );
+function halfSection(x: number): Pt[] {
+  const shape = endShape(x);
+  const crown = sample(CROWN, x);
+  const hipZ = sample(HIP, x) * shape.zScale;
+  const beltY = lerp(sample(BELT, x), shape.yAnchor, shape.yMix);
+  const crownY = lerp(crown, shape.yAnchor, shape.yMix * 0.85);
+  const aheadOfDeck = THREE.MathUtils.smoothstep(x, DECK - 0.06, DECK + 0.1);
+  const behindCowl = 1 - THREE.MathUtils.smoothstep(x, COWL - 0.1, COWL + 0.06);
+  const cabin = aheadOfDeck * behindCowl;
+  const topZ = hipZ * lerp(0.62, 0.55, cabin);
+  const beltZ = hipZ * lerp(0.78, 0.9, cabin);
+  const sillZ = hipZ * 0.84;
+  const lip = outerLip(x);
+  const pts: Pt[] = [];
+
+  for (let i = 0; i <= 7; i += 1) {
+    const t = i / 7;
+    const s = t * t * (3 - 2 * t);
+    const z = lerp(0, lerp(topZ, beltZ, s), Math.sin(s * Math.PI * 0.5));
+    const y = lerp(crownY, beltY, s);
+    pts.push({ y, z, glass: cabin > 0.45 });
+  }
+
+  for (let i = 1; i <= 6; i += 1) {
+    const t = i / 6;
+    const yNatural = lerp(beltY, ROCKER, t * t * (3 - 2 * t));
+    let z = hipZ;
+    if (t < 0.22) {
+      z = lerp(beltZ, hipZ, Math.sin((t / 0.22) * Math.PI * 0.5));
+    } else if (t > 0.78) {
+      z = lerp(hipZ, sillZ, (t - 0.78) / 0.22);
+    }
+    const outer = THREE.MathUtils.smoothstep(z, hipZ * 0.62, hipZ * 0.9);
+    const y = lerp(yNatural, Math.max(yNatural, lip), outer);
+    const flare = 1 + outer * THREE.MathUtils.smoothstep(lip, ROCKER + 0.08, ROCKER + 0.4) * 0.015;
+    pts.push({ y, z: z * flare, glass: false });
+  }
+
+  const sillY = pts[pts.length - 1]?.y ?? ROCKER;
+  for (let i = 1; i <= 5; i += 1) {
+    const t = i / 5;
+    const s = t * t * (3 - 2 * t);
+    pts.push({
+      y: lerp(sillY, ROCKER * 0.92, s),
+      z: lerp(sillZ, 0, s),
+      glass: false,
+    });
+  }
+
+  return pts;
 }
 
-function ringAt(st: Key, kind: "body" | "glass"): THREE.Vector3[] {
-  const half = kind === "body" ? bodyHalf(st) : glassHalf(st);
-  const points: THREE.Vector3[] = [];
-  const emit = (z: number, y: number, sharp = false) => {
-    const shaped = kind === "body" ? applyArch(st.x, y, z, st.y1) : { y, z };
-    const point = new THREE.Vector3(st.x, shaped.y, shaped.z);
-    points.push(point);
-    if (sharp) points.push(point.clone());
-  };
-  for (let i = 0; i < half.length - 1; i += 1) emit(half[i].z, half[i].y, half[i].sharp);
-  for (let i = half.length - 1; i >= 1; i -= 1) emit(-half[i].z, half[i].y, half[i].sharp);
-  return points;
-}
+type Built = { body: THREE.BufferGeometry; glass: THREE.BufferGeometry };
 
-function loft(keys: readonly Key[], kind: "body" | "glass"): THREE.BufferGeometry {
-  const samples = sampleKeys(keys, kind === "body" ? 128 : 72);
-  const first = ringAt(samples[0], kind);
-  const rings = first.length;
+function build(): Built {
+  const xs: number[] = [];
+  for (let x = TIP; x >= TAIL; x -= 0.04) xs.push(Number(x.toFixed(4)));
+  if (xs[xs.length - 1] !== TAIL) xs.push(TAIL);
+
+  const rings: Pt[][] = [];
+  const stationX: number[] = [];
+  for (const x of xs) {
+    if (endShape(x).zScale < 0.07) continue;
+    const half = halfSection(x);
+    const ring: Pt[] = [];
+    for (let i = 0; i < half.length - 1; i += 1) ring.push({ ...half[i], z: half[i].z });
+    for (let i = half.length - 1; i >= 1; i -= 1) ring.push({ ...half[i], z: -half[i].z });
+    rings.push(ring);
+    stationX.push(x);
+  }
+
+  const ringsN = rings[0]?.length ?? 0;
+  if (rings.some((ring) => ring.length !== ringsN)) {
+    throw new Error("Body cross-section changed length");
+  }
+
   const positions: number[] = [];
-  const indices: number[] = [];
-  const nose = samples[0];
-  const tail = samples[samples.length - 1];
-  positions.push(nose.x, (nose.y0 + nose.y1) / 2, 0);
-
-  for (const st of samples) {
-    const ring = ringAt(st, kind);
-    if (ring.length !== rings) {
-      throw new Error(`Cross-section changed length at x=${st.x}`);
+  const glassFlags: boolean[] = [];
+  const nose = endShape(TIP);
+  positions.push(TIP, nose.yAnchor, 0);
+  glassFlags.push(false);
+  for (let s = 0; s < rings.length; s += 1) {
+    const ring = rings[s];
+    const x = stationX[s] ?? 0;
+    for (const point of ring) {
+      positions.push(x, point.y, point.z);
+      glassFlags.push(point.glass);
     }
-    for (const point of ring) positions.push(point.x, point.y, point.z);
   }
-  positions.push(tail.x, (tail.y0 + tail.y1) / 2, 0);
+  const tail = endShape(TAIL);
+  positions.push(TAIL, tail.yAnchor, 0);
+  glassFlags.push(false);
 
-  const vertex = (station: number, i: number) => 1 + station * rings + i;
-  for (let i = 0; i < rings; i += 1) {
-    indices.push(0, vertex(0, i), vertex(0, (i + 1) % rings));
+  const indices: number[] = [];
+  const vertex = (station: number, i: number) => 1 + station * ringsN + i;
+  for (let i = 0; i < ringsN; i += 1) {
+    indices.push(0, vertex(0, i), vertex(0, (i + 1) % ringsN));
   }
-  for (let station = 0; station < samples.length - 1; station += 1) {
-    for (let i = 0; i < rings; i += 1) {
-      const next = (i + 1) % rings;
+  for (let station = 0; station < rings.length - 1; station += 1) {
+    for (let i = 0; i < ringsN; i += 1) {
+      const next = (i + 1) % ringsN;
       const a = vertex(station, i);
       const b = vertex(station, next);
       const c = vertex(station + 1, i);
@@ -200,10 +224,10 @@ function loft(keys: readonly Key[], kind: "body" | "glass"): THREE.BufferGeometr
       indices.push(a, c, b, b, c, d);
     }
   }
-  const tailIndex = 1 + samples.length * rings;
-  const last = samples.length - 1;
-  for (let i = 0; i < rings; i += 1) {
-    indices.push(tailIndex, vertex(last, (i + 1) % rings), vertex(last, i));
+  const tailIndex = 1 + rings.length * ringsN;
+  const last = rings.length - 1;
+  for (let i = 0; i < ringsN; i += 1) {
+    indices.push(tailIndex, vertex(last, (i + 1) % ringsN), vertex(last, i));
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -228,14 +252,62 @@ function loft(keys: readonly Key[], kind: "body" | "glass"): THREE.BufferGeometr
     }
     geometry.computeVertexNormals();
   }
+
+  return {
+    body: take(geometry, glassFlags, false),
+    glass: take(geometry, glassFlags, true),
+  };
+}
+
+function take(source: THREE.BufferGeometry, glassFlags: readonly boolean[], wantGlass: boolean): THREE.BufferGeometry {
+  const srcPos = source.attributes.position;
+  const srcNor = source.attributes.normal;
+  const srcIndex = source.index;
+  if (!srcIndex || !srcNor) throw new Error("Body mesh is missing index or normals");
+  const map = new Map<number, number>();
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const indices: number[] = [];
+
+  const use = (index: number) => {
+    const existing = map.get(index);
+    if (existing !== undefined) return existing;
+    const next = positions.length / 3;
+    map.set(index, next);
+    positions.push(srcPos.getX(index), srcPos.getY(index), srcPos.getZ(index));
+    normals.push(srcNor.getX(index), srcNor.getY(index), srcNor.getZ(index));
+    return next;
+  };
+
+  for (let i = 0; i < srcIndex.count; i += 3) {
+    const a = srcIndex.getX(i);
+    const b = srcIndex.getY(i);
+    const c = srcIndex.getZ(i);
+    const glassCount = Number(glassFlags[a]) + Number(glassFlags[b]) + Number(glassFlags[c]);
+    const isGlass = glassCount === 3;
+    if (isGlass !== wantGlass) continue;
+    indices.push(use(a), use(b), use(c));
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geometry.setIndex(indices);
   geometry.computeBoundingSphere();
   return geometry;
 }
 
+let cache: Built | null = null;
+
+function surfaces(): Built {
+  if (!cache) cache = build();
+  return cache;
+}
+
 export function createBodyGeometry(): THREE.BufferGeometry {
-  return loft(BODY_KEYS, "body");
+  return surfaces().body;
 }
 
 export function createGlassGeometry(): THREE.BufferGeometry {
-  return loft(GLASS_KEYS, "glass");
+  return surfaces().glass;
 }

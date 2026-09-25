@@ -34,7 +34,7 @@ export function lesson(mode: Mode, valve: ValveId): Lesson {
           {
             heading: "Which car this is",
             body: "A heat-pump Model 3 with the long-range 2170 pack: rear permanent-magnet drive unit, octovalve on the front supermanifold, and a liquid-cooled car computer on the passenger bulkhead. Early cars used a superbottle and a resistive cabin heater instead of this valve. Chip generations changed later. None of those variants are mixed into the picture.",
-            sources: ["electrek-pack", "service-octo", "service-computer", "insideevs-cooling"],
+            sources: ["electrek-pack", "service-octo", "service-computer", "insideevs-cooling", "dimensions"],
           },
         ],
       };

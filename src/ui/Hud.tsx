@@ -212,7 +212,7 @@ export function Hud({
               ))}
             </ul>
             <p className="disclaimer">
-              Unofficial classroom model. Not affiliated with Tesla, Inc. The body is an original silhouette for orientation, not a licensed surface.
+              Unofficial classroom model. Not affiliated with Tesla, Inc. The body is an original surface shaped to published Model 3 length, width, height, and wheelbase. It is not factory CAD and not a licensed scan.
             </p>
           </div>
         </div>
