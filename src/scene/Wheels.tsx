@@ -1,11 +1,26 @@
-import { useMemo, useRef, type MutableRefObject } from "react";
+import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import type { Group } from "three";
-import { FRONT_X, HALF_TRACK, REAR_X, WHEEL_R } from "./layout";
+import { FRONT_X, HALF_TRACK, REAR_X, WHEEL_R, readShot } from "./layout";
 
 export function Wheels({ spin }: { spin: MutableRefObject<{ wheel: number }> }) {
+  const root = useRef<Group>(null);
+  const clip = useMemo(() => {
+    if (readShot() !== "cabin") return [];
+    return [new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.02)];
+  }, []);
+  useLayoutEffect(() => {
+    const group = root.current;
+    if (!group || clip.length === 0) return;
+    group.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      for (const material of materials) material.clippingPlanes = clip;
+    });
+  }, [clip]);
   return (
-    <group>
+    <group ref={root}>
       <Wheel x={FRONT_X} z={HALF_TRACK} />
       <Wheel x={FRONT_X} z={-HALF_TRACK} />
       <Wheel x={REAR_X} z={HALF_TRACK} driven spin={spin} />

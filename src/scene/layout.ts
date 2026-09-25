@@ -7,6 +7,20 @@ export const FRONT_X = 1.4;
 export const REAR_X = FRONT_X - 2.875;
 export const HALF_TRACK = 0.79;
 
+export type Shot = "cabin" | "exterior";
+
+export const SHOT: Record<Shot, { pos: Vec3; target: Vec3 }> = {
+  cabin: { pos: [1.28, 0.98, -1.18], target: [0.42, 0.58, 0.06] },
+  exterior: { pos: [1.7, 1.15, 2.7], target: [0.1, 0.62, 0] },
+};
+
+export function readShot(): Shot | null {
+  if (typeof window === "undefined") return null;
+  const shot = new URLSearchParams(window.location.search).get("shot");
+  if (shot === "cabin" || shot === "exterior") return shot;
+  return null;
+}
+
 export const POSE: Record<Mode, { pos: [number, number, number]; target: [number, number, number] }> = {
   overview: { pos: [1.55, 2.05, 4.15], target: [-0.05, 0.58, 0] },
   inside: { pos: [1.35, 1.9, 3.55], target: [-0.02, 0.52, 0] },

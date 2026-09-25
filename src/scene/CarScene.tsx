@@ -7,7 +7,7 @@ import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { Mode, SceneControl } from "../model";
 import { REAR_GEAR_RATIO } from "../model";
-import { POSE } from "./layout";
+import { POSE, SHOT, readShot } from "./layout";
 import { Studio } from "./Studio";
 import { Body } from "./Body";
 import { Wheels } from "./Wheels";
@@ -40,6 +40,7 @@ function Drivetrain({
 function CameraRig({ mode, resetToken }: { mode: Mode; resetToken: number }) {
   const camera = useThree((state) => state.camera);
   const controls = useThree((state) => state.controls) as OrbitControlsImpl | null;
+  const shot = useRef(readShot());
   const touched = useRef(false);
   const pending = useRef(true);
   const anim = useRef({
@@ -58,7 +59,7 @@ function CameraRig({ mode, resetToken }: { mode: Mode; resetToken: number }) {
     if (!controls) return;
     if (pending.current) {
       pending.current = false;
-      const pose = POSE[mode];
+      const pose = shot.current ? SHOT[shot.current] : POSE[mode];
       anim.current.t = 0;
       anim.current.fromP.copy(camera.position);
       anim.current.toP.set(...pose.pos);
@@ -83,7 +84,7 @@ function CameraRig({ mode, resetToken }: { mode: Mode; resetToken: number }) {
       maxDistance={9.5}
       maxPolarAngle={Math.PI / 2 - 0.04}
       minPolarAngle={0.28}
-      autoRotate={mode === "overview" && !touched.current}
+      autoRotate={mode === "overview" && !touched.current && shot.current === null}
       autoRotateSpeed={0.45}
       onStart={() => {
         touched.current = true;
@@ -112,6 +113,24 @@ function StudioFocus() {
   return <DepthOfField ref={effect} bokehScale={1.7} resolutionScale={0.55} focusDistance={4} focusRange={1.8} />;
 }
 
+function Grade() {
+  const bloom = <Bloom luminanceThreshold={1.05} mipmapBlur intensity={0.12} radius={0.3} />;
+  if (readShot()) {
+    return (
+      <EffectComposer multisampling={0} enableNormalPass={false}>
+        {bloom}
+      </EffectComposer>
+    );
+  }
+  return (
+    <EffectComposer multisampling={0} enableNormalPass={false}>
+      <StudioFocus />
+      {bloom}
+      <Vignette eskil={false} offset={0.32} darkness={0.62} />
+    </EffectComposer>
+  );
+}
+
 function SceneContents({
   control,
   resetToken,
@@ -136,11 +155,7 @@ function SceneContents({
       <Computers mode={control.mode} assist={control.assist} onSelect={() => onSelect("computers")} />
       <Callouts mode={control.mode} onSelect={onSelect} />
       <CameraRig mode={control.mode} resetToken={resetToken} />
-      <EffectComposer multisampling={0} enableNormalPass={false}>
-        <StudioFocus />
-        <Bloom luminanceThreshold={1.05} mipmapBlur intensity={0.12} radius={0.3} />
-        <Vignette eskil={false} offset={0.32} darkness={0.62} />
-      </EffectComposer>
+      <Grade />
     </>
   );
 }
@@ -154,7 +169,8 @@ export function CarScene({
   resetToken: number;
   onSelect: (mode: Mode) => void;
 }) {
-  const pose = POSE.overview;
+  const shot = readShot();
+  const pose = shot ? SHOT[shot] : POSE.overview;
   return (
     <Canvas
       camera={{ position: pose.pos, fov: 28, near: 0.05, far: 50 }}
@@ -163,6 +179,7 @@ export function CarScene({
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 0.9;
+        gl.localClippingEnabled = shot === "cabin";
       }}
     >
       <Suspense fallback={null}>
