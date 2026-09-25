@@ -3,6 +3,7 @@ import { CarScene } from "./scene/CarScene";
 import { Hud } from "./ui/Hud";
 import type { Mode, ValveId } from "./model";
 import { valveIndex, valves } from "./model";
+import { readShot } from "./scene/layout";
 
 function clamp(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -18,10 +19,10 @@ export function App() {
   const [touched, setTouched] = useState<Partial<Record<Mode, boolean>>>({});
   const [deeper, setDeeper] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(() => readShot() !== null);
   const [resetToken, setResetToken] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [booting, setBooting] = useState(true);
+  const [booting, setBooting] = useState(() => readShot() === null);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
